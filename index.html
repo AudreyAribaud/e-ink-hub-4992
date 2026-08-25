@@ -2,203 +2,185 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>E-Ink Hub</title>
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#ffffff">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
 <body>
-  <div id="app-container">
-    <!-- Header -->
-    <header class="eink-header">
-      <div class="header-left">
-        <span id="current-time">00:00</span>
-        <span id="current-date">--/--/----</span>
-      </div>
-      <div class="header-right">
-        <button id="btn-refresh-screen" title="Nettoyer l'écran (Anti-Ghosting)">✦ Rafraîchir</button>
+  <div id="eink-screen" class="eink-container">
+    <!-- Status Bar -->
+    <header class="status-bar">
+      <span class="brand">E-INK HUB v2.0</span>
+      <div class="status-right">
+        <button id="refresh-btn" title="Forcer le rafraîchissement (Anti-Ghosting)">↻ Refresh</button>
+        <span id="current-time">12:00</span>
+        <span class="battery">▰▰▰▱ 75%</span>
       </div>
     </header>
 
-    <!-- Main Content Area (SPA Views) -->
-    <main id="main-content">
-      
-      <!-- VIEW 1: DASHBOARD / LAUNCHER -->
-      <section id="view-dashboard" class="view active">
-        <div class="welcome-widget">
-          <h1>E-INK HUB</h1>
-          <p class="subtitle">Optimisé pour l'affichage passif et haute lisibilité.</p>
-        </div>
+    <!-- Main Layout -->
+    <div class="main-layout">
+      <!-- Sidebar Navigation -->
+      <nav class="sidebar">
+        <button class="nav-btn active" data-target="games-section">🕹️ Jeux</button>
+        <button class="nav-btn" data-target="reader-section">📖 Lectures</button>
+        <button class="nav-btn" data-target="journal-section">✍️ Notes</button>
+        <button class="nav-btn" data-target="tools-section">⚙️ Outils</button>
+      </nav>
 
-        <!-- Quick Note Widget -->
-        <div class="widget-box" id="widget-quick-note">
-          <h3>Note Rapide</h3>
-          <textarea id="quick-note-input" placeholder="Écrivez quelque chose... (Sauvegarde automatique)"></textarea>
-        </div>
-
-        <!-- App Grid -->
-        <div class="app-grid">
-          <button class="app-card" data-target="view-todo">
-            <span class="app-icon">☑</span>
-            <span class="app-label">Tâches</span>
-          </button>
-          <button class="app-card" data-target="view-reader">
-            <span class="app-icon">▤</span>
-            <span class="app-label">Lecteur</span>
-          </button>
-          <button class="app-card" data-target="view-timer">
-            <span class="app-icon">⏱</span>
-            <span class="app-label">Minuteur</span>
-          </button>
-          <button class="app-card" data-target="view-calc">
-            <span class="app-icon">±</span>
-            <span class="app-label">Calculatrice</span>
-          </button>
-          <button class="app-card" data-target="view-settings">
-            <span class="app-icon">⚙</span>
-            <span class="app-label">Options</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- VIEW 2: TODO LIST -->
-      <section id="view-todo" class="view">
-        <div class="view-header">
-          <button class="btn-back">← Retour</button>
-          <h2>Liste de Tâches</h2>
-        </div>
-        <div class="todo-input-group">
-          <input type="text" id="todo-input" placeholder="Nouvelle tâche...">
-          <button id="todo-add-btn">Ajouter</button>
-        </div>
-        <ul id="todo-list" class="eink-list"></ul>
-        <button id="todo-clear-completed" class="btn-secondary">Effacer terminées</button>
-      </section>
-
-      <!-- VIEW 3: READER (TEXT SAVER) -->
-      <section id="view-reader" class="view">
-        <div class="view-header">
-          <button class="btn-back">← Retour</button>
-          <h2>Lecteur Épuré</h2>
-        </div>
-        <div class="reader-controls">
-          <button id="reader-font-toggle">Changer Police (Serif/Sans)</button>
-          <button id="reader-size-dec">A-</button>
-          <button id="reader-size-inc">A+</button>
-        </div>
-        <div class="reader-input-area" id="reader-input-view">
-          <p class="instruction">Collez un texte ou un article ci-dessous pour une lecture confortable sans distraction.</p>
-          <textarea id="reader-text-input" placeholder="Collez votre texte ici..."></textarea>
-          <button id="reader-load-btn" class="btn-primary">Commencer la lecture</button>
-        </div>
-        <div class="reader-content-area hidden" id="reader-content-view">
-          <div id="reader-text-display" class="serif-font"></div>
-          <button id="reader-edit-btn" class="btn-secondary">Modifier le texte</button>
-        </div>
-      </section>
-
-      <!-- VIEW 4: TIMER (POMODORO) -->
-      <section id="view-timer" class="view">
-        <div class="view-header">
-          <button class="btn-back">← Retour</button>
-          <h2>Minuteur Focus</h2>
-        </div>
-        <div class="timer-display-container">
-          <div id="timer-display">25:00</div>
-          <div id="timer-label">Travail</div>
-        </div>
-        <div class="timer-controls">
-          <button id="timer-start-btn">Démarrer</button>
-          <button id="timer-pause-btn" class="hidden">Pause</button>
-          <button id="timer-reset-btn">Réinitialiser</button>
-        </div>
-        <div class="timer-presets">
-          <button class="preset-btn" data-minutes="25">Pomodoro (25m)</button>
-          <button class="preset-btn" data-minutes="5">Pause Courte (5m)</button>
-          <button class="preset-btn" data-minutes="15">Pause Longue (15m)</button>
-        </div>
-      </section>
-
-      <!-- VIEW 5: CALCULATOR -->
-      <section id="view-calc" class="view">
-        <div class="view-header">
-          <button class="btn-back">← Retour</button>
-          <h2>Calculatrice</h2>
-        </div>
-        <div class="calc-screen" id="calc-display">0</div>
-        <div class="calc-grid">
-          <button class="calc-btn" data-val="C">C</button>
-          <button class="calc-btn" data-val="back">⌫</button>
-          <button class="calc-btn" data-val="/">/</button>
-          <button class="calc-btn" data-val="*">*</button>
+      <!-- Content Area -->
+      <main class="content-area">
+        
+        <!-- GAMES SECTION -->
+        <section id="games-section" class="app-section active">
+          <h2>Jeux Minimalistes</h2>
+          <p class="section-desc">Des jeux de réflexion lents, parfaits pour la concentration et l'esthétique papier électronique.</p>
           
-          <button class="calc-btn" data-val="7">7</button>
-          <button class="calc-btn" data-val="8">8</button>
-          <button class="calc-btn" data-val="9">9</button>
-          <button class="calc-btn" data-val="-">-</button>
-          
-          <button class="calc-btn" data-val="4">4</button>
-          <button class="calc-btn" data-val="5">5</button>
-          <button class="calc-btn" data-val="6">6</button>
-          <button class="calc-btn" data-val="+">+</button>
-          
-          <button class="calc-btn" data-val="1">1</button>
-          <button class="calc-btn" data-val="2">2</button>
-          <button class="calc-btn" data-val="3">3</button>
-          <button class="calc-btn" data-val="=">=</button>
-          
-          <button class="calc-btn double-width" data-val="0">0</button>
-          <button class="calc-btn" data-val=".">.</button>
-        </div>
-      </section>
+          <div class="game-selector">
+            <button class="game-tab active" data-game="binairo">Binairo (Logique)</button>
+            <button class="game-tab" data-game="rogue">E-Ink Quest (Aventure)</button>
+            <button class="game-tab" data-game="haiku">Créateur d'Haiku</button>
+          </div>
 
-      <!-- VIEW 6: SETTINGS -->
-      <section id="view-settings" class="view">
-        <div class="view-header">
-          <button class="btn-back">← Retour</button>
-          <h2>Options & Infos</h2>
-        </div>
-        <div class="settings-group">
-          <h3>Affichage E-Ink</h3>
-          <label class="settings-item">
-            <span>Contraste Élevé Pur (Noir & Blanc)</span>
-            <input type="checkbox" id="setting-pure-bw" checked>
-          </label>
-          <label class="settings-item">
-            <span>Police Globale Serif</span>
-            <input type="checkbox" id="setting-serif">
-          </label>
-          <label class="settings-item">
-            <span>Taille du texte globale</span>
-            <select id="setting-font-size">
-              <option value="small">Petite</option>
-              <option value="medium" selected>Normale</option>
-              <option value="large">Grande</option>
-              <option value="xlarge">Très Grande</option>
+          <!-- Game 1: Binairo -->
+          <div id="game-binairo" class="game-container active">
+            <h3>Grille Binairo (6x6)</h3>
+            <p class="game-instructions">Remplissez la grille avec des ⬛ (Noir) et ⬜ (Blanc). Pas plus de deux blocs identiques côte à côte. Chaque ligne et colonne doit contenir autant de noirs que de blancs.</p>
+            <div class="binairo-grid" id="binairo-board"></div>
+            <div class="game-controls">
+              <button id="check-binairo">Vérifier la grille</button>
+              <button id="reset-binairo">Nouvelle Grille</button>
+            </div>
+            <p id="binairo-feedback" class="feedback"></p>
+          </div>
+
+          <!-- Game 2: E-Ink Quest -->
+          <div id="game-rogue" class="game-container">
+            <h3>E-Ink Quest</h3>
+            <p class="game-instructions">Déplacez votre aventurier (▲) pour ramasser la clé (🔑) et atteindre la porte (🚪). Évitez les pièges (☠️).</p>
+            <div class="rogue-layout">
+              <div class="rogue-grid" id="rogue-board"></div>
+              <div class="rogue-controls">
+                <div class="d-pad">
+                  <button id="btn-up">▲</button>
+                  <div class="d-pad-row">
+                    <button id="btn-left">◀</button>
+                    <button id="btn-down">▼</button>
+                    <button id="btn-right">▶</button>
+                  </div>
+                </div>
+                <div class="rogue-stats">
+                  <div>Pas: <span id="rogue-steps">0</span></div>
+                  <div>Statut: <span id="rogue-status">En exploration</span></div>
+                  <button id="reset-rogue">Recommencer</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Game 3: Haiku Generator -->
+          <div id="game-haiku" class="game-container">
+            <h3>Atelier d'Haiku</h3>
+            <p class="game-instructions">Composez un poème court de 3 vers (5-7-5 syllabes suggérées) inspiré par les mots aléatoires fournis.</p>
+            <div class="haiku-sandbox">
+              <div class="inspiration-box">
+                Mots d'inspiration : <strong id="haiku-words">Silence, Vent, Ombre</strong>
+                <button id="new-inspiration-btn">Changer d'inspiration</button>
+              </div>
+              <div class="haiku-inputs">
+                <input type="text" id="haiku-line1" placeholder="Premier vers (ex: Le vent se lève)" maxlength="100">
+                <input type="text" id="haiku-line2" placeholder="Deuxième vers (ex: Les feuilles dansent en silence)" maxlength="100">
+                <input type="text" id="haiku-line3" placeholder="Troisième vers (ex: La nuit commence)" maxlength="100">
+              </div>
+              <div class="game-controls">
+                <button id="save-haiku-btn">Enregistrer dans le Journal</button>
+                <button id="clear-haiku-btn">Effacer</button>
+              </div>
+              <p id="haiku-feedback" class="feedback"></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- READER SECTION -->
+        <section id="reader-section" class="app-section">
+          <h2>Lectures Classiques</h2>
+          <p class="section-desc">Une sélection de textes libres de droits optimisés pour une lecture reposante.</p>
+          <div class="reader-controls">
+            <select id="text-selector">
+              <option value="pensee">Pensées - Marc Aurèle (Extrait)</option>
+              <option value="corbeau">Le Corbeau - Edgar Allan Poe</option>
+              <option value="art-guerre">L'Art de la Guerre - Sun Tzu (Maximes)</option>
             </select>
-          </label>
-        </div>
-        <div class="settings-group">
-          <h3>À propos</h3>
-          <p>Ce hub est conçu spécifiquement pour les liseuses et smartphones à écran e-ink (encre électronique) :</p>
-          <ul>
-            <li>Pas d'animations ni de transitions fluides (évite le ghosting).</li>
-            <li>Contraste maximal (Noir/Blanc pur).</li>
-            <li>Boutons larges et tactiles faciles à cibler.</li>
-            <li>Fonctionne 100% hors-ligne.</li>
-          </ul>
-          <button id="btn-flash-heavy" class="btn-primary">Flash de nettoyage complet</button>
-        </div>
-      </section>
+            <div class="font-controls">
+              <button id="decrease-font">A-</button>
+              <button id="increase-font">A+</button>
+            </div>
+          </div>
+          <div id="reader-content" class="reader-paper">
+            <!-- Text loaded dynamically -->
+          </div>
+        </section>
 
-    </main>
+        <!-- JOURNAL SECTION -->
+        <section id="journal-section" class="app-section">
+          <h2>Journal de Pensées</h2>
+          <p class="section-desc">Un espace d'écriture minimaliste sans distractions. Vos notes sont sauvegardées localement.</p>
+          <div class="journal-container">
+            <textarea id="journal-input" placeholder="Écrivez vos pensées ici..."></textarea>
+            <div class="journal-actions">
+              <button id="save-note-btn">Sauvegarder la Note</button>
+              <button id="clear-notes-btn">Tout effacer</button>
+            </div>
+            <h3>Notes Enregistrées</h3>
+            <div id="saved-notes-list" class="notes-list"></div>
+          </div>
+        </section>
+
+        <!-- TOOLS SECTION -->
+        <section id="tools-section" class="app-section">
+          <h2>Outils de Concentration</h2>
+          <p class="section-desc">Des utilitaires simples pour structurer votre temps.</p>
+          
+          <div class="tools-grid">
+            <!-- Pomodoro -->
+            <div class="tool-card">
+              <h3>Minuteur Focus</h3>
+              <div class="pomodoro-display" id="pomo-display">25:00</div>
+              <div class="tool-controls">
+                <button id="pomo-start">Démarrer</button>
+                <button id="pomo-pause">Pause</button>
+                <button id="pomo-reset">Réinitialiser</button>
+              </div>
+            </div>
+
+            <!-- Contrast & Theme Settings -->
+            <div class="tool-card">
+              <h3>Paramètres d'Affichage</h3>
+              <p>Personnalisez le rendu visuel pour simuler différents types d'écrans à encre électronique.</p>
+              <div class="theme-options">
+                <label>
+                  <input type="radio" name="theme-select" value="classic-eink" checked> E-Ink Classique (Gris/Blanc)
+                </label>
+                <label>
+                  <input type="radio" name="theme-select" value="amber-eink"> E-Ink Ambré (Lecture de nuit)
+                </label>
+                <label>
+                  <input type="radio" name="theme-select" value="high-contrast"> Contraste Élevé (Noir & Blanc Pur)
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
   </div>
 
-  <!-- Flash overlay for anti-ghosting -->
-  <div id="flash-overlay"></div>
+  <!-- Flash overlay for simulated e-ink refresh -->
+  <div id="eink-flash" class="eink-flash-overlay"></div>
 
   <script src="app.js"></script>
 </body>

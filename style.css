@@ -1,474 +1,523 @@
-/* ========================================== */
-/* E-INK OPTIMIZED CSS                        */
-/* Pure Black & White, No Transitions/Fades   */
-/* ========================================== */
+/* E-Ink Hub Stylesheet */
+:root {
+  --bg-color: #f4f4f0; /* Paper-like warm white */
+  --text-color: #1a1a1a; /* Soft black */
+  --border-color: #2b2b2b;
+  --card-bg: #ffffff;
+  --active-bg: #e0e0da;
+  --font-family: 'Georgia', 'Times New Roman', serif;
+  --font-size-base: 16px;
+}
 
-/* Reset & Base */
+/* Amber E-Ink Theme */
+body.theme-amber-eink {
+  --bg-color: #fbf0db;
+  --text-color: #2c2212;
+  --border-color: #4a3b24;
+  --card-bg: #fdf7eb;
+  --active-bg: #ebdcb9;
+}
+
+/* High Contrast Theme */
+body.theme-high-contrast {
+  --bg-color: #ffffff;
+  --text-color: #000000;
+  --border-color: #000000;
+  --card-bg: #ffffff;
+  --active-bg: #cccccc;
+  --font-family: monospace;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  /* Disable all transitions and animations to prevent e-ink ghosting and lag */
-  transition: none !important;
-  animation: none !important;
-  -webkit-tap-highlight-color: transparent;
-}
-
-:root {
-  --bg-color: #ffffff;
-  --text-color: #000000;
-  --border-color: #000000;
-  --border-width: 2px;
-  --border-width-thick: 4px;
-  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-current: var(--font-sans);
-  --font-size-base: 16px;
 }
 
 body {
-  background-color: var(--bg-color);
+  background-color: #111;
   color: var(--text-color);
-  font-family: var(--font-current);
+  font-family: var(--font-family);
   font-size: var(--font-size-base);
-  line-height: 1.4;
-  padding: 0;
-  margin: 0;
   display: flex;
   justify-content: center;
-  min-height: 100vh;
-}
-
-/* App Container - Smartphone format constraint */
-#app-container {
-  width: 100%;
-  max-width: 480px;
-  min-height: 100vh;
-  border-left: var(--border-width) solid var(--border-color);
-  border-right: var(--border-width) solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-color);
-}
-
-/* Header */
-.eink-header {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 10px 15px;
-  border-bottom: var(--border-width-thick) solid var(--border-color);
-  font-weight: bold;
-  font-size: 0.95rem;
+  min-height: 100vh;
+  padding: 10px;
+  transition: background-color 0.3s ease;
 }
 
-.header-left span {
-  margin-right: 10px;
-}
-
-#btn-refresh-screen {
-  background: var(--bg-color);
-  color: var(--text-color);
-  border: var(--border-width) solid var(--border-color);
-  padding: 4px 8px;
-  font-size: 0.8rem;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-#btn-refresh-screen:active {
-  background: var(--text-color);
-  color: var(--bg-color);
-}
-
-/* Main Content & Views */
-main {
-  flex: 1;
+/* Main Container simulating an E-Reader */
+.eink-container {
+  background-color: var(--bg-color);
+  width: 100%;
+  max-width: 900px;
+  height: 95vh;
+  min-height: 600px;
+  border: 8px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: hidden;
 }
 
-.view {
-  display: none;
-  flex-direction: column;
-  padding: 15px;
-  width: 100%;
-  flex: 1;
-}
-
-.view.active {
-  display: flex;
-}
-
-.view-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 15px;
-  border-bottom: var(--border-width) solid var(--border-color);
-  padding-bottom: 10px;
-}
-
-.view-header h2 {
-  font-size: 1.4rem;
-  margin-left: 15px;
-  text-transform: uppercase;
-}
-
-/* Buttons */
-button {
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  border: var(--border-width) solid var(--border-color);
-  padding: 12px 16px;
-  font-size: 1rem;
-  font-weight: bold;
-  font-family: inherit;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-button:active, button.active {
-  background-color: var(--text-color);
-  color: var(--bg-color);
-}
-
-.btn-back {
-  padding: 6px 12px;
-  font-size: 0.9rem;
-}
-
-.btn-primary {
-  border-width: var(--border-width-thick);
-  width: 100%;
-  margin-top: 10px;
-}
-
-.btn-secondary {
-  border-style: dashed;
-  width: 100%;
-  margin-top: 10px;
-}
-
-/* Inputs & Textareas */
-input[type="text"], textarea, select {
-  width: 100%;
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  border: var(--border-width) solid var(--border-color);
-  padding: 10px;
-  font-size: 1rem;
-  font-family: inherit;
-  border-radius: 0;
-  outline: none;
-}
-
-input[type="text"]:focus, textarea:focus, select:focus {
-  border-width: var(--border-width-thick);
-}
-
-/* VIEW 1: DASHBOARD */
-.welcome-widget {
-  margin-bottom: 15px;
-  border-bottom: var(--border-width) solid var(--border-color);
-  padding-bottom: 15px;
-}
-
-.welcome-widget h1 {
-  font-size: 2rem;
-  letter-spacing: 1px;
-  font-weight: 900;
-}
-
-.subtitle {
-  font-size: 0.9rem;
-  font-style: italic;
-}
-
-.widget-box {
-  border: var(--border-width) solid var(--border-color);
-  padding: 10px;
-  margin-bottom: 20px;
-}
-
-.widget-box h3 {
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-.widget-box textarea {
-  height: 60px;
-  resize: none;
-  border: none;
-  padding: 0;
-  font-size: 0.95rem;
-}
-
-.app-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-top: auto;
-}
-
-.app-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px 10px;
-  border: var(--border-width-thick) solid var(--border-color);
-  background: var(--bg-color);
-  min-height: 100px;
-}
-
-.app-icon {
-  font-size: 2rem;
-  margin-bottom: 5px;
-}
-
-.app-label {
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  font-weight: bold;
-}
-
-/* VIEW 2: TODO LIST */
-.todo-input-group {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 15px;
-}
-
-.todo-input-group input {
-  flex: 1;
-}
-
-.eink-list {
-  list-style: none;
-  margin-bottom: 15px;
-}
-
-.eink-list li {
-  display: flex;
-  align-items: center;
-  padding: 12px 10px;
-  border-bottom: var(--border-width) solid var(--border-color);
-  font-size: 1.1rem;
-  cursor: pointer;
-}
-
-.eink-list li.completed {
-  text-decoration: line-through;
-  opacity: 0.6;
-}
-
-.eink-list li::before {
-  content: "☐ ";
-  font-family: monospace;
-  white-space: pre;
-  font-weight: bold;
-  margin-right: 10px;
-  font-size: 1.2rem;
-}
-
-.eink-list li.completed::before {
-  content: "☑ ";
-}
-
-/* VIEW 3: READER */
-.reader-controls {
-  display: flex;
-  gap: 5px;
-  margin-bottom: 15px;
-}
-
-.reader-controls button {
-  padding: 6px 10px;
-  font-size: 0.85rem;
-  flex: 1;
-}
-
-.reader-input-area textarea {
-  height: 250px;
-  margin-bottom: 10px;
-}
-
-.reader-content-area {
-  border: var(--border-width) solid var(--border-color);
-  padding: 15px;
-  background: var(--bg-color);
-  max-height: 60vh;
-  overflow-y: auto;
-}
-
-#reader-text-display {
-  line-height: 1.6;
-  white-space: pre-wrap;
-}
-
-.serif-font {
-  font-family: var(--font-serif);
-}
-
-.sans-font {
-  font-family: var(--font-sans);
-}
-
-/* VIEW 4: TIMER */
-.timer-display-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border: var(--border-width-thick) solid var(--border-color);
-  padding: 40px 20px;
-  margin: 20px 0;
-  background: var(--bg-color);
-}
-
-#timer-display {
-  font-size: 4rem;
-  font-weight: 900;
-  font-family: monospace;
-  letter-spacing: -2px;
-}
-
-#timer-label {
-  font-size: 1.2rem;
-  text-transform: uppercase;
-  font-weight: bold;
-  margin-top: 10px;
-}
-
-.timer-controls {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.timer-controls button {
-  flex: 1;
-}
-
-.timer-presets {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.timer-presets button {
-  font-size: 0.9rem;
-  padding: 8px;
-}
-
-/* VIEW 5: CALCULATOR */
-.calc-screen {
-  border: var(--border-width-thick) solid var(--border-color);
-  padding: 15px;
-  font-size: 2rem;
-  text-align: right;
-  font-family: monospace;
-  margin-bottom: 15px;
-  background: var(--bg-color);
-  word-wrap: break-word;
-  word-break: break-all;
-}
-
-.calc-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-
-.calc-btn {
-  padding: 15px 5px;
-  font-size: 1.3rem;
-  font-family: monospace;
-}
-
-.double-width {
-  grid-column: span 2;
-}
-
-/* VIEW 6: SETTINGS */
-.settings-group {
-  border: var(--border-width) solid var(--border-color);
-  padding: 15px;
-  margin-bottom: 15px;
-}
-
-.settings-group h3 {
-  font-size: 1rem;
-  text-transform: uppercase;
-  margin-bottom: 10px;
-  border-bottom: var(--border-width) solid var(--border-color);
-  padding-bottom: 5px;
-}
-
-.settings-item {
+/* Status Bar */
+.status-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border-color);
-  font-size: 0.95rem;
+  padding: 8px 16px;
+  border-bottom: 2px solid var(--border-color);
+  font-size: 0.85rem;
+  font-weight: bold;
+  letter-spacing: 1px;
 }
 
-.settings-item:last-child {
-  border-bottom: none;
+.status-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
-.settings-item input[type="checkbox"] {
-  width: 24px;
-  height: 24px;
-  accent-color: #000000;
+#refresh-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  padding: 2px 8px;
+  font-size: 0.75rem;
   cursor: pointer;
+  font-family: inherit;
 }
 
-.settings-group p, .settings-group ul {
+#refresh-btn:hover {
+  background-color: var(--active-bg);
+}
+
+/* Main Layout */
+.main-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 180px;
+  border-right: 2px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-color);
+}
+
+.nav-btn {
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border-color);
+  padding: 18px 12px;
+  text-align: left;
+  font-size: 1rem;
+  font-family: inherit;
+  font-weight: bold;
+  cursor: pointer;
+  color: var(--text-color);
+  transition: background-color 0.1s;
+}
+
+.nav-btn:hover,
+.nav-btn.active {
+  background-color: var(--active-bg);
+  text-decoration: underline;
+}
+
+/* Content Area */
+.content-area {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-section {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+}
+
+.app-section.active {
+  display: flex;
+}
+
+h2 {
+  font-size: 1.8rem;
+  margin-bottom: 5px;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 5px;
+}
+
+.section-desc {
+  font-style: italic;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+  opacity: 0.8;
+}
+
+/* Buttons & Inputs */
+button {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border: 2px solid var(--border-color);
+  padding: 8px 16px;
+  font-family: inherit;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+button:hover {
+  background-color: var(--active-bg);
+}
+
+input[type="text"], textarea, select {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border: 2px solid var(--border-color);
+  padding: 8px;
+  font-family: inherit;
+  font-size: 1rem;
+  outline: none;
+}
+
+/* Game Selector Tabs */
+.game-selector {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+}
+
+.game-tab {
   font-size: 0.9rem;
+  padding: 6px 12px;
+}
+
+.game-tab.active {
+  background-color: var(--active-bg);
+  border-bottom: 3px solid var(--border-color);
+}
+
+.game-container {
+  display: none;
+  flex-direction: column;
+  gap: 15px;
+  background: var(--card-bg);
+  padding: 15px;
+  border: 2px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.game-container.active {
+  display: flex;
+}
+
+.game-instructions {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  border-left: 3px solid var(--border-color);
+  padding-left: 10px;
   margin-bottom: 10px;
 }
 
-.settings-group ul {
-  padding-left: 20px;
+/* Game 1: Binairo Grid */
+.binairo-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 45px);
+  grid-template-rows: repeat(6, 45px);
+  gap: 4px;
+  margin: 10px auto;
+  justify-content: center;
 }
 
-/* Global Font Size Modifiers */
-body.font-small { --font-size-base: 14px; }
-body.font-medium { --font-size-base: 16px; }
-body.font-large { --font-size-base: 19px; }
-body.font-xlarge { --font-size-base: 22px; }
-
-body.global-serif { --font-current: var(--font-serif); }
-body.global-sans { --font-current: var(--font-sans); }
-
-/* Pure Black and White Mode (No Grays) */
-body.pure-bw {
-  --bg-color: #ffffff;
-  --text-color: #000000;
+.binairo-cell {
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  background-color: var(--card-bg);
 }
 
-/* Anti-Ghosting Flash Overlay */
-#flash-overlay {
-  position: fixed;
+.binairo-cell.locked {
+  background-color: var(--active-bg);
+  cursor: not-allowed;
+}
+
+/* Game 2: E-Ink Quest */
+.rogue-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+}
+
+.rogue-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 35px);
+  grid-template-rows: repeat(8, 35px);
+  gap: 2px;
+  border: 2px solid var(--border-color);
+  background-color: var(--border-color);
+}
+
+.rogue-cell {
+  background-color: var(--card-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  user-select: none;
+}
+
+.rogue-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.d-pad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.d-pad-row {
+  display: flex;
+  gap: 5px;
+}
+
+.d-pad button {
+  width: 45px;
+  height: 45px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.rogue-stats {
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+/* Game 3: Haiku Sandbox */
+.haiku-sandbox {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.inspiration-box {
+  background-color: var(--active-bg);
+  padding: 10px;
+  border: 1px dashed var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.haiku-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.haiku-inputs input {
+  width: 100%;
+}
+
+/* Reader Section */
+.reader-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  gap: 10px;
+}
+
+.font-controls button {
+  padding: 4px 10px;
+  font-size: 0.85rem;
+}
+
+.reader-paper {
+  background-color: var(--card-bg);
+  border: 2px solid var(--border-color);
+  padding: 25px;
+  line-height: 1.6;
+  font-size: 1.1rem;
+  max-height: 400px;
+  overflow-y: auto;
+  white-space: pre-line;
+}
+
+/* Journal Section */
+.journal-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+#journal-input {
+  width: 100%;
+  height: 150px;
+  resize: vertical;
+}
+
+.journal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.note-item {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  position: relative;
+}
+
+.note-item .delete-note {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.note-date {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  margin-bottom: 5px;
+}
+
+/* Tools Section */
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.tool-card {
+  background-color: var(--card-bg);
+  border: 2px solid var(--border-color);
+  padding: 15px;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.pomodoro-display {
+  font-size: 3rem;
+  text-align: center;
+  font-family: monospace;
+  font-weight: bold;
+  border: 2px solid var(--border-color);
+  padding: 10px;
+  background-color: var(--bg-color);
+}
+
+.tool-controls {
+  display: flex;
+  justify-content: space-around;
+}
+
+.theme-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.theme-options label {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Feedback messages */
+.feedback {
+  font-weight: bold;
+  font-size: 0.95rem;
+  text-align: center;
+  min-height: 20px;
+}
+
+/* Simulated E-Ink Flash Overlay */
+.eink-flash-overlay {
+  position: absolute;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   background-color: #000000;
-  z-index: 9999;
-  display: none;
+  opacity: 0;
   pointer-events: none;
+  z-index: 9999;
 }
 
-/* Utilities */
-.hidden {
-  display: none !important;
+.eink-flash-overlay.flash-active {
+  animation: einkFlashAnim 0.4s ease-in-out;
+}
+
+@keyframes einkFlashAnim {
+  0% { opacity: 0; }
+  40% { opacity: 1; background-color: #000000; }
+  70% { opacity: 1; background-color: #ffffff; }
+  100% { opacity: 0; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 650px) {
+  .main-layout {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 2px solid var(--border-color);
+  }
+  .nav-btn {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    font-size: 0.85rem;
+    border-bottom: none;
+    border-right: 1px solid var(--border-color);
+  }
+  .eink-container {
+    height: 98vh;
+  }
 }
