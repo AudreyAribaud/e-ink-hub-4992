@@ -1,95 +1,194 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>E-Ink Games Hub</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#ffffff">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>E-Ink Hub</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
-  <header class="eink-header">
-    <h1>E-INK GAMES</h1>
-    <div class="header-controls">
-      <button id="theme-toggle" class="eink-btn" aria-label="Inverser les couleurs">Inverser</button>
+    <div id="flash-overlay"></div>
+    
+    <div class="container">
+        <!-- Header -->
+        <header class="eink-header">
+            <div class="header-left">
+                <h1 id="hub-title" class="clickable">E-INK HUB</h1>
+                <span id="current-time">00:00</span>
+            </div>
+            <div class="header-right">
+                <button id="btn-refresh" title="Clear Ghosting">Refresh Screen</button>
+                <button id="btn-home" class="hidden">Home</button>
+            </div>
+        </header>
+
+        <!-- Dashboard / Main Menu -->
+        <main id="view-dashboard" class="view">
+            <div class="welcome-section">
+                <p class="date-today" id="current-date">Loading date...</p>
+                <p class="quote-box" id="daily-quote">"Simplicity is the ultimate sophistication."</p>
+            </div>
+            
+            <div class="app-grid">
+                <div class="app-card" data-target="sudoku">
+                    <h3>Sudoku</h3>
+                    <p>Classic 9x9 grid puzzle</p>
+                </div>
+                <div class="app-card" data-target="wordle">
+                    <h3>E-Word</h3>
+                    <p>6 attempts to guess a 5-letter word</p>
+                </div>
+                <div class="app-card" data-target="mines">
+                    <h3>Minesweeper</h3>
+                    <p>Clear the grid without hitting mines</p>
+                </div>
+                <div class="app-card" data-target="tictactoe">
+                    <h3>Tic-Tac-Toe</h3>
+                    <p>Play against a smart AI</p>
+                </div>
+                <!-- New Games -->
+                <div class="app-card" data-target="chess">
+                    <h3>E-Chess</h3>
+                    <p>Local 2-player chess board</p>
+                </div>
+                <div class="app-card" data-target="game2048">
+                    <h3>E-2048</h3>
+                    <p>Slide tiles to reach 2048</p>
+                </div>
+                <div class="app-card" data-target="hangman">
+                    <h3>Hangman</h3>
+                    <p>Guess the hidden word</p>
+                </div>
+                <div class="app-card" data-target="notes">
+                    <h3>E-Notes</h3>
+                    <p>Simple distraction-free notepad</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Sudoku View -->
+        <section id="view-sudoku" class="view hidden">
+            <h2>Sudoku</h2>
+            <div class="game-controls">
+                <button id="sudoku-easy">Easy</button>
+                <button id="sudoku-medium">Medium</button>
+                <button id="sudoku-hard">Hard</button>
+                <button id="sudoku-check">Check</button>
+            </div>
+            <div id="sudoku-grid" class="sudoku-grid"></div>
+            <div class="sudoku-keypad">
+                <button class="num-key">1</button>
+                <button class="num-key">2</button>
+                <button class="num-key">3</button>
+                <button class="num-key">4</button>
+                <button class="num-key">5</button>
+                <button class="num-key">6</button>
+                <button class="num-key">7</button>
+                <button class="num-key">8</button>
+                <button class="num-key">9</button>
+                <button class="num-key" id="sudoku-clear">Clear</button>
+            </div>
+        </section>
+
+        <!-- Wordle View -->
+        <section id="view-wordle" class="view hidden">
+            <h2>E-Word</h2>
+            <div id="wordle-grid" class="wordle-grid"></div>
+            <div id="wordle-keyboard" class="keyboard"></div>
+            <div class="game-controls">
+                <button id="wordle-reset">New Word</button>
+            </div>
+        </section>
+
+        <!-- Minesweeper View -->
+        <section id="view-mines" class="view hidden">
+            <h2>Minesweeper</h2>
+            <div class="game-controls">
+                <span id="mine-count">Mines: 10</span>
+                <button id="mines-mode-btn">Mode: Reveal</button>
+                <button id="mines-reset">Reset</button>
+            </div>
+            <div id="mines-grid" class="mines-grid"></div>
+        </section>
+
+        <!-- Tic-Tac-Toe View -->
+        <section id="view-tictactoe" class="view hidden">
+            <h2>Tic-Tac-Toe</h2>
+            <div class="game-controls">
+                <span id="ttt-status">Your turn (X)</span>
+                <button id="ttt-reset">Reset</button>
+            </div>
+            <div id="ttt-grid" class="ttt-grid">
+                <div class="ttt-cell" data-index="0"></div>
+                <div class="ttt-cell" data-index="1"></div>
+                <div class="ttt-cell" data-index="2"></div>
+                <div class="ttt-cell" data-index="3"></div>
+                <div class="ttt-cell" data-index="4"></div>
+                <div class="ttt-cell" data-index="5"></div>
+                <div class="ttt-cell" data-index="6"></div>
+                <div class="ttt-cell" data-index="7"></div>
+                <div class="ttt-cell" data-index="8"></div>
+            </div>
+        </section>
+
+        <!-- Chess View -->
+        <section id="view-chess" class="view hidden">
+            <h2>E-Chess</h2>
+            <p class="game-info">Local 2-Player. Click a piece, then click a valid square.</p>
+            <div class="game-controls">
+                <span id="chess-turn">Turn: White</span>
+                <button id="chess-reset">Reset Board</button>
+            </div>
+            <div id="chess-board" class="chess-board"></div>
+        </section>
+
+        <!-- 2048 View -->
+        <section id="view-game2048" class="view hidden">
+            <h2>E-2048</h2>
+            <div class="game-controls">
+                <span id="score-2048">Score: 0</span>
+                <button id="reset-2048">Reset</button>
+            </div>
+            <div id="grid-2048" class="grid-2048"></div>
+            <div class="controls-2048">
+                <button id="btn-2048-up">▲</button>
+                <div class="horizontal-controls">
+                    <button id="btn-2048-left">◀</button>
+                    <button id="btn-2048-down">▼</button>
+                    <button id="btn-2048-right">▶</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hangman View -->
+        <section id="view-hangman" class="view hidden">
+            <h2>Hangman</h2>
+            <div class="game-controls">
+                <span id="hangman-lives">Lives: 6</span>
+                <button id="hangman-reset">New Word</button>
+            </div>
+            <div class="hangman-display">
+                <pre id="hangman-gallows"></pre>
+                <div id="hangman-word-display">_ _ _ _ _</div>
+            </div>
+            <div id="hangman-keyboard" class="keyboard"></div>
+        </section>
+
+        <!-- Notes View -->
+        <section id="view-notes" class="view hidden">
+            <h2>E-Notes</h2>
+            <p class="game-info">Your notes are automatically saved locally.</p>
+            <textarea id="notes-textarea" placeholder="Start writing here..."></textarea>
+            <div class="game-controls">
+                <button id="notes-clear">Clear All</button>
+            </div>
+        </section>
     </div>
-  </header>
 
-  <nav class="game-selector">
-    <button class="nav-btn active" data-game="sudoku">Sudoku</button>
-    <button class="nav-btn" data-game="mines">Démineur</button>
-    <button class="nav-btn" data-game="wordle">Le Mot</button>
-    <button class="nav-btn" data-game="tictactoe">Morpion</button>
-  </nav>
-
-  <main class="game-container">
-    <!-- SUDOKU -->
-    <section id="game-sudoku" class="game-section active">
-      <div class="game-controls">
-        <button id="sudoku-new" class="eink-btn">Nouveau</button>
-        <button id="sudoku-check" class="eink-btn">Vérifier</button>
-        <span id="sudoku-status" class="status-text"></span>
-      </div>
-      <div class="sudoku-grid-wrapper">
-        <div id="sudoku-grid" class="sudoku-grid"></div>
-      </div>
-      <div class="sudoku-keypad">
-        <button class="keypad-btn" data-val="1">1</button>
-        <button class="keypad-btn" data-val="2">2</button>
-        <button class="keypad-btn" data-val="3">3</button>
-        <button class="keypad-btn" data-val="4">4</button>
-        <button class="keypad-btn" data-val="5">5</button>
-        <button class="keypad-btn" data-val="6">6</button>
-        <button class="keypad-btn" data-val="7">7</button>
-        <button class="keypad-btn" data-val="8">8</button>
-        <button class="keypad-btn" data-val="9">9</button>
-        <button class="keypad-btn" data-val="clear">Effacer</button>
-      </div>
-    </section>
-
-    <!-- MINESWEEPER -->
-    <section id="game-mines" class="game-section">
-      <div class="game-controls">
-        <button id="mines-reset" class="eink-btn">Recommencer</button>
-        <button id="mines-mode-toggle" class="eink-btn">Mode: Découvrir</button>
-        <span id="mines-status" class="status-text">Mines: 10</span>
-      </div>
-      <div class="mines-grid-wrapper">
-        <div id="mines-grid" class="mines-grid"></div>
-      </div>
-    </section>
-
-    <!-- WORDLE -->
-    <section id="game-wordle" class="game-section">
-      <div class="game-controls">
-        <button id="wordle-reset" class="eink-btn">Nouveau Mot</button>
-        <span id="wordle-status" class="status-text">Devinez le mot en 6 essais</span>
-      </div>
-      <div class="wordle-grid-wrapper">
-        <div id="wordle-grid" class="wordle-grid"></div>
-      </div>
-      <div id="wordle-keyboard" class="wordle-keyboard"></div>
-    </section>
-
-    <!-- TIC TAC TOE -->
-    <section id="game-tictactoe" class="game-section">
-      <div class="game-controls">
-        <button id="ttt-reset" class="eink-btn">Recommencer</button>
-        <span id="ttt-status" class="status-text">À vous de jouer (X)</span>
-      </div>
-      <div class="ttt-grid-wrapper">
-        <div id="ttt-grid" class="ttt-grid"></div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="eink-footer">
-    <p>Optimisé pour liseuses et écrans E-Ink. Pas d'animations, contraste maximal.</p>
-  </footer>
-
-  <script src="app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
