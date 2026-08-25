@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>E-Ink Hub</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+  <div id="app-container">
+    <!-- Header -->
+    <header class="eink-header">
+      <div class="header-left">
+        <span id="current-time">00:00</span>
+        <span id="current-date">--/--/----</span>
+      </div>
+      <div class="header-right">
+        <button id="btn-refresh-screen" title="Nettoyer l'écran (Anti-Ghosting)">✦ Rafraîchir</button>
+      </div>
+    </header>
+
+    <!-- Main Content Area (SPA Views) -->
+    <main id="main-content">
+      
+      <!-- VIEW 1: DASHBOARD / LAUNCHER -->
+      <section id="view-dashboard" class="view active">
+        <div class="welcome-widget">
+          <h1>E-INK HUB</h1>
+          <p class="subtitle">Optimisé pour l'affichage passif et haute lisibilité.</p>
+        </div>
+
+        <!-- Quick Note Widget -->
+        <div class="widget-box" id="widget-quick-note">
+          <h3>Note Rapide</h3>
+          <textarea id="quick-note-input" placeholder="Écrivez quelque chose... (Sauvegarde automatique)"></textarea>
+        </div>
+
+        <!-- App Grid -->
+        <div class="app-grid">
+          <button class="app-card" data-target="view-todo">
+            <span class="app-icon">☑</span>
+            <span class="app-label">Tâches</span>
+          </button>
+          <button class="app-card" data-target="view-reader">
+            <span class="app-icon">▤</span>
+            <span class="app-label">Lecteur</span>
+          </button>
+          <button class="app-card" data-target="view-timer">
+            <span class="app-icon">⏱</span>
+            <span class="app-label">Minuteur</span>
+          </button>
+          <button class="app-card" data-target="view-calc">
+            <span class="app-icon">±</span>
+            <span class="app-label">Calculatrice</span>
+          </button>
+          <button class="app-card" data-target="view-settings">
+            <span class="app-icon">⚙</span>
+            <span class="app-label">Options</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- VIEW 2: TODO LIST -->
+      <section id="view-todo" class="view">
+        <div class="view-header">
+          <button class="btn-back">← Retour</button>
+          <h2>Liste de Tâches</h2>
+        </div>
+        <div class="todo-input-group">
+          <input type="text" id="todo-input" placeholder="Nouvelle tâche...">
+          <button id="todo-add-btn">Ajouter</button>
+        </div>
+        <ul id="todo-list" class="eink-list"></ul>
+        <button id="todo-clear-completed" class="btn-secondary">Effacer terminées</button>
+      </section>
+
+      <!-- VIEW 3: READER (TEXT SAVER) -->
+      <section id="view-reader" class="view">
+        <div class="view-header">
+          <button class="btn-back">← Retour</button>
+          <h2>Lecteur Épuré</h2>
+        </div>
+        <div class="reader-controls">
+          <button id="reader-font-toggle">Changer Police (Serif/Sans)</button>
+          <button id="reader-size-dec">A-</button>
+          <button id="reader-size-inc">A+</button>
+        </div>
+        <div class="reader-input-area" id="reader-input-view">
+          <p class="instruction">Collez un texte ou un article ci-dessous pour une lecture confortable sans distraction.</p>
+          <textarea id="reader-text-input" placeholder="Collez votre texte ici..."></textarea>
+          <button id="reader-load-btn" class="btn-primary">Commencer la lecture</button>
+        </div>
+        <div class="reader-content-area hidden" id="reader-content-view">
+          <div id="reader-text-display" class="serif-font"></div>
+          <button id="reader-edit-btn" class="btn-secondary">Modifier le texte</button>
+        </div>
+      </section>
+
+      <!-- VIEW 4: TIMER (POMODORO) -->
+      <section id="view-timer" class="view">
+        <div class="view-header">
+          <button class="btn-back">← Retour</button>
+          <h2>Minuteur Focus</h2>
+        </div>
+        <div class="timer-display-container">
+          <div id="timer-display">25:00</div>
+          <div id="timer-label">Travail</div>
+        </div>
+        <div class="timer-controls">
+          <button id="timer-start-btn">Démarrer</button>
+          <button id="timer-pause-btn" class="hidden">Pause</button>
+          <button id="timer-reset-btn">Réinitialiser</button>
+        </div>
+        <div class="timer-presets">
+          <button class="preset-btn" data-minutes="25">Pomodoro (25m)</button>
+          <button class="preset-btn" data-minutes="5">Pause Courte (5m)</button>
+          <button class="preset-btn" data-minutes="15">Pause Longue (15m)</button>
+        </div>
+      </section>
+
+      <!-- VIEW 5: CALCULATOR -->
+      <section id="view-calc" class="view">
+        <div class="view-header">
+          <button class="btn-back">← Retour</button>
+          <h2>Calculatrice</h2>
+        </div>
+        <div class="calc-screen" id="calc-display">0</div>
+        <div class="calc-grid">
+          <button class="calc-btn" data-val="C">C</button>
+          <button class="calc-btn" data-val="back">⌫</button>
+          <button class="calc-btn" data-val="/">/</button>
+          <button class="calc-btn" data-val="*">*</button>
+          
+          <button class="calc-btn" data-val="7">7</button>
+          <button class="calc-btn" data-val="8">8</button>
+          <button class="calc-btn" data-val="9">9</button>
+          <button class="calc-btn" data-val="-">-</button>
+          
+          <button class="calc-btn" data-val="4">4</button>
+          <button class="calc-btn" data-val="5">5</button>
+          <button class="calc-btn" data-val="6">6</button>
+          <button class="calc-btn" data-val="+">+</button>
+          
+          <button class="calc-btn" data-val="1">1</button>
+          <button class="calc-btn" data-val="2">2</button>
+          <button class="calc-btn" data-val="3">3</button>
+          <button class="calc-btn" data-val="=">=</button>
+          
+          <button class="calc-btn double-width" data-val="0">0</button>
+          <button class="calc-btn" data-val=".">.</button>
+        </div>
+      </section>
+
+      <!-- VIEW 6: SETTINGS -->
+      <section id="view-settings" class="view">
+        <div class="view-header">
+          <button class="btn-back">← Retour</button>
+          <h2>Options & Infos</h2>
+        </div>
+        <div class="settings-group">
+          <h3>Affichage E-Ink</h3>
+          <label class="settings-item">
+            <span>Contraste Élevé Pur (Noir & Blanc)</span>
+            <input type="checkbox" id="setting-pure-bw" checked>
+          </label>
+          <label class="settings-item">
+            <span>Police Globale Serif</span>
+            <input type="checkbox" id="setting-serif">
+          </label>
+          <label class="settings-item">
+            <span>Taille du texte globale</span>
+            <select id="setting-font-size">
+              <option value="small">Petite</option>
+              <option value="medium" selected>Normale</option>
+              <option value="large">Grande</option>
+              <option value="xlarge">Très Grande</option>
+            </select>
+          </label>
+        </div>
+        <div class="settings-group">
+          <h3>À propos</h3>
+          <p>Ce hub est conçu spécifiquement pour les liseuses et smartphones à écran e-ink (encre électronique) :</p>
+          <ul>
+            <li>Pas d'animations ni de transitions fluides (évite le ghosting).</li>
+            <li>Contraste maximal (Noir/Blanc pur).</li>
+            <li>Boutons larges et tactiles faciles à cibler.</li>
+            <li>Fonctionne 100% hors-ligne.</li>
+          </ul>
+          <button id="btn-flash-heavy" class="btn-primary">Flash de nettoyage complet</button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Flash overlay for anti-ghosting -->
+  <div id="flash-overlay"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

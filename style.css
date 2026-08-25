@@ -1,0 +1,474 @@
+/* ========================================== */
+/* E-INK OPTIMIZED CSS                        */
+/* Pure Black & White, No Transitions/Fades   */
+/* ========================================== */
+
+/* Reset & Base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  /* Disable all transitions and animations to prevent e-ink ghosting and lag */
+  transition: none !important;
+  animation: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  --bg-color: #ffffff;
+  --text-color: #000000;
+  --border-color: #000000;
+  --border-width: 2px;
+  --border-width-thick: 4px;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-current: var(--font-sans);
+  --font-size-base: 16px;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: var(--font-current);
+  font-size: var(--font-size-base);
+  line-height: 1.4;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+/* App Container - Smartphone format constraint */
+#app-container {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  border-left: var(--border-width) solid var(--border-color);
+  border-right: var(--border-width) solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-color);
+}
+
+/* Header */
+.eink-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: var(--border-width-thick) solid var(--border-color);
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+
+.header-left span {
+  margin-right: 10px;
+}
+
+#btn-refresh-screen {
+  background: var(--bg-color);
+  color: var(--text-color);
+  border: var(--border-width) solid var(--border-color);
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+#btn-refresh-screen:active {
+  background: var(--text-color);
+  color: var(--bg-color);
+}
+
+/* Main Content & Views */
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.view {
+  display: none;
+  flex-direction: column;
+  padding: 15px;
+  width: 100%;
+  flex: 1;
+}
+
+.view.active {
+  display: flex;
+}
+
+.view-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: var(--border-width) solid var(--border-color);
+  padding-bottom: 10px;
+}
+
+.view-header h2 {
+  font-size: 1.4rem;
+  margin-left: 15px;
+  text-transform: uppercase;
+}
+
+/* Buttons */
+button {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  border: var(--border-width) solid var(--border-color);
+  padding: 12px 16px;
+  font-size: 1rem;
+  font-weight: bold;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+button:active, button.active {
+  background-color: var(--text-color);
+  color: var(--bg-color);
+}
+
+.btn-back {
+  padding: 6px 12px;
+  font-size: 0.9rem;
+}
+
+.btn-primary {
+  border-width: var(--border-width-thick);
+  width: 100%;
+  margin-top: 10px;
+}
+
+.btn-secondary {
+  border-style: dashed;
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* Inputs & Textareas */
+input[type="text"], textarea, select {
+  width: 100%;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  border: var(--border-width) solid var(--border-color);
+  padding: 10px;
+  font-size: 1rem;
+  font-family: inherit;
+  border-radius: 0;
+  outline: none;
+}
+
+input[type="text"]:focus, textarea:focus, select:focus {
+  border-width: var(--border-width-thick);
+}
+
+/* VIEW 1: DASHBOARD */
+.welcome-widget {
+  margin-bottom: 15px;
+  border-bottom: var(--border-width) solid var(--border-color);
+  padding-bottom: 15px;
+}
+
+.welcome-widget h1 {
+  font-size: 2rem;
+  letter-spacing: 1px;
+  font-weight: 900;
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.widget-box {
+  border: var(--border-width) solid var(--border-color);
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.widget-box h3 {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.widget-box textarea {
+  height: 60px;
+  resize: none;
+  border: none;
+  padding: 0;
+  font-size: 0.95rem;
+}
+
+.app-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: auto;
+}
+
+.app-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 10px;
+  border: var(--border-width-thick) solid var(--border-color);
+  background: var(--bg-color);
+  min-height: 100px;
+}
+
+.app-icon {
+  font-size: 2rem;
+  margin-bottom: 5px;
+}
+
+.app-label {
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+/* VIEW 2: TODO LIST */
+.todo-input-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.todo-input-group input {
+  flex: 1;
+}
+
+.eink-list {
+  list-style: none;
+  margin-bottom: 15px;
+}
+
+.eink-list li {
+  display: flex;
+  align-items: center;
+  padding: 12px 10px;
+  border-bottom: var(--border-width) solid var(--border-color);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.eink-list li.completed {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.eink-list li::before {
+  content: "☐ ";
+  font-family: monospace;
+  white-space: pre;
+  font-weight: bold;
+  margin-right: 10px;
+  font-size: 1.2rem;
+}
+
+.eink-list li.completed::before {
+  content: "☑ ";
+}
+
+/* VIEW 3: READER */
+.reader-controls {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 15px;
+}
+
+.reader-controls button {
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  flex: 1;
+}
+
+.reader-input-area textarea {
+  height: 250px;
+  margin-bottom: 10px;
+}
+
+.reader-content-area {
+  border: var(--border-width) solid var(--border-color);
+  padding: 15px;
+  background: var(--bg-color);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+#reader-text-display {
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.serif-font {
+  font-family: var(--font-serif);
+}
+
+.sans-font {
+  font-family: var(--font-sans);
+}
+
+/* VIEW 4: TIMER */
+.timer-display-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: var(--border-width-thick) solid var(--border-color);
+  padding: 40px 20px;
+  margin: 20px 0;
+  background: var(--bg-color);
+}
+
+#timer-display {
+  font-size: 4rem;
+  font-weight: 900;
+  font-family: monospace;
+  letter-spacing: -2px;
+}
+
+#timer-label {
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.timer-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.timer-controls button {
+  flex: 1;
+}
+
+.timer-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.timer-presets button {
+  font-size: 0.9rem;
+  padding: 8px;
+}
+
+/* VIEW 5: CALCULATOR */
+.calc-screen {
+  border: var(--border-width-thick) solid var(--border-color);
+  padding: 15px;
+  font-size: 2rem;
+  text-align: right;
+  font-family: monospace;
+  margin-bottom: 15px;
+  background: var(--bg-color);
+  word-wrap: break-word;
+  word-break: break-all;
+}
+
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.calc-btn {
+  padding: 15px 5px;
+  font-size: 1.3rem;
+  font-family: monospace;
+}
+
+.double-width {
+  grid-column: span 2;
+}
+
+/* VIEW 6: SETTINGS */
+.settings-group {
+  border: var(--border-width) solid var(--border-color);
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.settings-group h3 {
+  font-size: 1rem;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  border-bottom: var(--border-width) solid var(--border-color);
+  padding-bottom: 5px;
+}
+
+.settings-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.95rem;
+}
+
+.settings-item:last-child {
+  border-bottom: none;
+}
+
+.settings-item input[type="checkbox"] {
+  width: 24px;
+  height: 24px;
+  accent-color: #000000;
+  cursor: pointer;
+}
+
+.settings-group p, .settings-group ul {
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+.settings-group ul {
+  padding-left: 20px;
+}
+
+/* Global Font Size Modifiers */
+body.font-small { --font-size-base: 14px; }
+body.font-medium { --font-size-base: 16px; }
+body.font-large { --font-size-base: 19px; }
+body.font-xlarge { --font-size-base: 22px; }
+
+body.global-serif { --font-current: var(--font-serif); }
+body.global-sans { --font-current: var(--font-sans); }
+
+/* Pure Black and White Mode (No Grays) */
+body.pure-bw {
+  --bg-color: #ffffff;
+  --text-color: #000000;
+}
+
+/* Anti-Ghosting Flash Overlay */
+#flash-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000000;
+  z-index: 9999;
+  display: none;
+  pointer-events: none;
+}
+
+/* Utilities */
+.hidden {
+  display: none !important;
+}
