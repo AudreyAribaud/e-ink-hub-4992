@@ -1,523 +1,354 @@
-/* E-Ink Hub Stylesheet */
+/* E-Ink Minimalist & High Contrast Theme */
 :root {
-  --bg-color: #f4f4f0; /* Paper-like warm white */
-  --text-color: #1a1a1a; /* Soft black */
-  --border-color: #2b2b2b;
-  --card-bg: #ffffff;
-  --active-bg: #e0e0da;
-  --font-family: 'Georgia', 'Times New Roman', serif;
-  --font-size-base: 16px;
-}
-
-/* Amber E-Ink Theme */
-body.theme-amber-eink {
-  --bg-color: #fbf0db;
-  --text-color: #2c2212;
-  --border-color: #4a3b24;
-  --card-bg: #fdf7eb;
-  --active-bg: #ebdcb9;
-}
-
-/* High Contrast Theme */
-body.theme-high-contrast {
   --bg-color: #ffffff;
-  --text-color: #000000;
+  --fg-color: #000000;
   --border-color: #000000;
-  --card-bg: #ffffff;
-  --active-bg: #cccccc;
-  --font-family: monospace;
+  --gray-light: #f0f0f0;
+  --gray-medium: #cccccc;
+  --gray-dark: #777777;
+  --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+[data-theme="dark"] {
+  --bg-color: #000000;
+  --fg-color: #ffffff;
+  --border-color: #ffffff;
+  --gray-light: #222222;
+  --gray-medium: #555555;
+  --gray-dark: #aaaaaa;
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  background-color: transparent;
+  color: var(--fg-color);
+  font-family: var(--font-family);
+  -webkit-tap-highlight-color: transparent;
+  transition: none !important; /* No animations for E-Ink screen friendly rendering */
 }
 
 body {
-  background-color: #111;
-  color: var(--text-color);
-  font-family: var(--font-family);
-  font-size: var(--font-size-base);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding: 10px;
-  transition: background-color 0.3s ease;
-}
-
-/* Main Container simulating an E-Reader */
-.eink-container {
   background-color: var(--bg-color);
-  width: 100%;
-  max-width: 900px;
-  height: 95vh;
-  min-height: 600px;
-  border: 8px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   display: flex;
   flex-direction: column;
-  position: relative;
-  overflow: hidden;
+  min-height: 100vh;
+  padding: 10px;
+  max-width: 600px;
+  margin: 0 auto;
+  border-left: 2px solid var(--border-color);
+  border-right: 2px solid var(--border-color);
 }
 
-/* Status Bar */
-.status-bar {
+/* Header */
+.eink-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 16px;
-  border-bottom: 2px solid var(--border-color);
-  font-size: 0.85rem;
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-
-.status-right {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-#refresh-btn {
-  background: none;
-  border: 1px solid var(--border-color);
-  padding: 2px 8px;
-  font-size: 0.75rem;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-#refresh-btn:hover {
-  background-color: var(--active-bg);
-}
-
-/* Main Layout */
-.main-layout {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
-/* Sidebar */
-.sidebar {
-  width: 180px;
-  border-right: 2px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-color);
-}
-
-.nav-btn {
-  background: none;
-  border: none;
-  border-bottom: 1px solid var(--border-color);
-  padding: 18px 12px;
-  text-align: left;
-  font-size: 1rem;
-  font-family: inherit;
-  font-weight: bold;
-  cursor: pointer;
-  color: var(--text-color);
-  transition: background-color 0.1s;
-}
-
-.nav-btn:hover,
-.nav-btn.active {
-  background-color: var(--active-bg);
-  text-decoration: underline;
-}
-
-/* Content Area */
-.content-area {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.app-section {
-  display: none;
-  flex-direction: column;
-  height: 100%;
-}
-
-.app-section.active {
-  display: flex;
-}
-
-h2 {
-  font-size: 1.8rem;
-  margin-bottom: 5px;
-  border-bottom: 2px solid var(--border-color);
-  padding-bottom: 5px;
-}
-
-.section-desc {
-  font-style: italic;
-  margin-bottom: 20px;
-  font-size: 0.95rem;
-  opacity: 0.8;
-}
-
-/* Buttons & Inputs */
-button {
-  background-color: var(--card-bg);
-  color: var(--text-color);
-  border: 2px solid var(--border-color);
-  padding: 8px 16px;
-  font-family: inherit;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.1s;
-}
-
-button:hover {
-  background-color: var(--active-bg);
-}
-
-input[type="text"], textarea, select {
-  background-color: var(--card-bg);
-  color: var(--text-color);
-  border: 2px solid var(--border-color);
-  padding: 8px;
-  font-family: inherit;
-  font-size: 1rem;
-  outline: none;
-}
-
-/* Game Selector Tabs */
-.game-selector {
-  display: flex;
-  gap: 5px;
-  margin-bottom: 15px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 3px double var(--border-color);
   padding-bottom: 10px;
-}
-
-.game-tab {
-  font-size: 0.9rem;
-  padding: 6px 12px;
-}
-
-.game-tab.active {
-  background-color: var(--active-bg);
-  border-bottom: 3px solid var(--border-color);
-}
-
-.game-container {
-  display: none;
-  flex-direction: column;
-  gap: 15px;
-  background: var(--card-bg);
-  padding: 15px;
-  border: 2px solid var(--border-color);
-  border-radius: 4px;
-}
-
-.game-container.active {
-  display: flex;
-}
-
-.game-instructions {
-  font-size: 0.9rem;
-  line-height: 1.4;
-  border-left: 3px solid var(--border-color);
-  padding-left: 10px;
   margin-bottom: 10px;
 }
 
-/* Game 1: Binairo Grid */
-.binairo-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 45px);
-  grid-template-rows: repeat(6, 45px);
-  gap: 4px;
-  margin: 10px auto;
-  justify-content: center;
-}
-
-.binairo-cell {
-  border: 2px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.eink-header h1 {
   font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+/* Buttons */
+.eink-btn {
+  background-color: var(--bg-color);
+  color: var(--fg-color);
+  border: 2px solid var(--border-color);
+  padding: 6px 12px;
+  font-size: 0.9rem;
   font-weight: bold;
   cursor: pointer;
-  user-select: none;
-  background-color: var(--card-bg);
+  text-transform: uppercase;
 }
 
-.binairo-cell.locked {
-  background-color: var(--active-bg);
-  cursor: not-allowed;
+.eink-btn:active, .eink-btn.active {
+  background-color: var(--fg-color);
+  color: var(--bg-color);
 }
 
-/* Game 2: E-Ink Quest */
-.rogue-layout {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
-  align-items: center;
-}
-
-.rogue-grid {
+/* Navigation */
+.game-selector {
   display: grid;
-  grid-template-columns: repeat(8, 35px);
-  grid-template-rows: repeat(8, 35px);
-  gap: 2px;
-  border: 2px solid var(--border-color);
-  background-color: var(--border-color);
-}
-
-.rogue-cell {
-  background-color: var(--card-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  font-weight: bold;
-  user-select: none;
-}
-
-.rogue-controls {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-}
-
-.d-pad {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  grid-template-columns: repeat(4, 1fr);
   gap: 5px;
-}
-
-.d-pad-row {
-  display: flex;
-  gap: 5px;
-}
-
-.d-pad button {
-  width: 45px;
-  height: 45px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-}
-
-.rogue-stats {
-  text-align: center;
-  font-size: 0.95rem;
-}
-
-/* Game 3: Haiku Sandbox */
-.haiku-sandbox {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.inspiration-box {
-  background-color: var(--active-bg);
-  padding: 10px;
-  border: 1px dashed var(--border-color);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.95rem;
-}
-
-.haiku-inputs {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.haiku-inputs input {
-  width: 100%;
-}
-
-/* Reader Section */
-.reader-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 15px;
-  gap: 10px;
 }
 
-.font-controls button {
-  padding: 4px 10px;
+.nav-btn {
+  background-color: var(--bg-color);
+  border: 2px solid var(--border-color);
+  padding: 8px 4px;
   font-size: 0.85rem;
-}
-
-.reader-paper {
-  background-color: var(--card-bg);
-  border: 2px solid var(--border-color);
-  padding: 25px;
-  line-height: 1.6;
-  font-size: 1.1rem;
-  max-height: 400px;
-  overflow-y: auto;
-  white-space: pre-line;
-}
-
-/* Journal Section */
-.journal-container {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-#journal-input {
-  width: 100%;
-  height: 150px;
-  resize: vertical;
-}
-
-.journal-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.notes-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.note-item {
-  background-color: var(--card-bg);
-  border: 1px solid var(--border-color);
-  padding: 10px;
-  position: relative;
-}
-
-.note-item .delete-note {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 0.8rem;
-}
-
-.note-date {
-  font-size: 0.75rem;
-  opacity: 0.6;
-  margin-bottom: 5px;
-}
-
-/* Tools Section */
-.tools-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-}
-
-.tool-card {
-  background-color: var(--card-bg);
-  border: 2px solid var(--border-color);
-  padding: 15px;
-  border-radius: 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.pomodoro-display {
-  font-size: 3rem;
-  text-align: center;
-  font-family: monospace;
   font-weight: bold;
+  cursor: pointer;
+}
+
+.nav-btn.active {
+  background-color: var(--fg-color);
+  color: var(--bg-color);
+}
+
+/* Main Container */
+.game-container {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.game-section {
+  display: none;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.game-section.active {
+  display: flex;
+}
+
+.game-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.status-text {
+  font-size: 0.9rem;
+  font-weight: bold;
+  border-bottom: 1px dashed var(--border-color);
+  padding-bottom: 2px;
+}
+
+/* SUDOKU */
+.sudoku-grid-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.sudoku-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  border: 3px solid var(--border-color);
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 1;
+}
+
+.sudoku-cell {
+  border: 1px solid var(--gray-medium);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Thick borders for 3x3 blocks */
+.sudoku-cell:nth-child(3n) {
+  border-right: 2px solid var(--border-color);
+}
+.sudoku-cell:nth-child(9n) {
+  border-right: none;
+}
+.sudoku-grid > div:nth-child(n+19):nth-child(-n+27),
+.sudoku-grid > div:nth-child(n+46):nth-child(-n+54) {
+  border-bottom: 2px solid var(--border-color);
+}
+
+.sudoku-cell.selected {
+  background-color: var(--gray-medium);
+  color: var(--bg-color);
+}
+
+.sudoku-cell.fixed {
+  background-color: var(--gray-light);
+}
+
+.sudoku-keypad {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+  max-width: 400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.keypad-btn {
   border: 2px solid var(--border-color);
-  padding: 10px;
+  padding: 10px 0;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.keypad-btn:active {
+  background-color: var(--fg-color);
+  color: var(--bg-color);
+}
+
+/* MINESWEEPER */
+.mines-grid-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.mines-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  border: 3px solid var(--border-color);
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 1;
+}
+
+.mines-cell {
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  background-color: var(--gray-medium);
+}
+
+.mines-cell.revealed {
   background-color: var(--bg-color);
 }
 
-.tool-controls {
-  display: flex;
-  justify-content: space-around;
+.mines-cell.mine {
+  background-color: var(--fg-color);
+  color: var(--bg-color);
 }
 
-.theme-options {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.mines-cell.flagged {
+  background-color: var(--gray-dark);
+  color: var(--bg-color);
 }
 
-.theme-options label {
-  cursor: pointer;
+/* WORDLE */
+.wordle-grid-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.wordle-grid {
+  display: grid;
+  grid-template-rows: repeat(6, 1fr);
+  gap: 5px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.wordle-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+}
+
+.wordle-cell {
+  border: 2px solid var(--border-color);
+  aspect-ratio: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-/* Feedback messages */
-.feedback {
+  justify-content: center;
+  font-size: 1.3rem;
   font-weight: bold;
-  font-size: 0.95rem;
-  text-align: center;
-  min-height: 20px;
+  text-transform: uppercase;
 }
 
-/* Simulated E-Ink Flash Overlay */
-.eink-flash-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
+/* Wordle States (E-Ink High Contrast) */
+.wordle-cell.correct {
+  background-color: var(--fg-color);
+  color: var(--bg-color);
+}
+
+.wordle-cell.present {
+  background-color: var(--gray-medium);
+  color: var(--fg-color);
+  border-style: dashed;
+}
+
+.wordle-cell.absent {
+  background-color: var(--gray-light);
+  color: var(--gray-dark);
+  border-color: var(--gray-medium);
+}
+
+.wordle-keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-width: 500px;
+  margin: 0 auto;
   width: 100%;
-  height: 100%;
-  background-color: #000000;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 9999;
 }
 
-.eink-flash-overlay.flash-active {
-  animation: einkFlashAnim 0.4s ease-in-out;
+.keyboard-row {
+  display: flex;
+  justify-content: center;
+  gap: 3px;
 }
 
-@keyframes einkFlashAnim {
-  0% { opacity: 0; }
-  40% { opacity: 1; background-color: #000000; }
-  70% { opacity: 1; background-color: #ffffff; }
-  100% { opacity: 0; }
+.key {
+  border: 1px solid var(--border-color);
+  padding: 10px 5px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  cursor: pointer;
+  flex: 1;
+  text-align: center;
+  text-transform: uppercase;
+  min-width: 20px;
 }
 
-/* Responsive adjustments */
-@media (max-width: 650px) {
-  .main-layout {
-    flex-direction: column;
-  }
-  .sidebar {
-    width: 100%;
-    flex-direction: row;
-    overflow-x: auto;
-    border-right: none;
-    border-bottom: 2px solid var(--border-color);
-  }
-  .nav-btn {
-    flex: 1;
-    padding: 10px;
-    text-align: center;
-    font-size: 0.85rem;
-    border-bottom: none;
-    border-right: 1px solid var(--border-color);
-  }
-  .eink-container {
-    height: 98vh;
-  }
+.key.wide {
+  flex: 1.5;
+}
+
+/* TIC TAC TOE */
+.ttt-grid-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.ttt-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 3px solid var(--border-color);
+  width: 100%;
+  max-width: 300px;
+  aspect-ratio: 1;
+}
+
+.ttt-cell {
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Footer */
+.eink-footer {
+  margin-top: 20px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 10px;
+  text-align: center;
+  font-size: 0.75rem;
 }

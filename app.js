@@ -1,499 +1,573 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // --- STATE MANAGEMENT ---
-  const state = {
-    currentSection: 'games-section',
-    currentGame: 'binairo',
-    fontSize: 16,
-    binairoGrid: [],
-    roguePlayer: { x: 0, y: 0 },
-    rogueKey: { x: 0, y: 0 },
-    rogueDoor: { x: 0, y: 0 },
-    rogueTraps: [],
-    rogueSteps: 0,
-    rogueGameOver: false,
-    pomoTime: 1500, // 25 mins
-    pomoInterval: null,
-    pomoRunning: false
-  };
-
-  // --- DOM ELEMENTS ---
-  const navButtons = document.querySelectorAll('.nav-btn');
-  const sections = document.querySelectorAll('.app-section');
-  const gameTabs = document.querySelectorAll('.game-tab');
-  const gameContainers = document.querySelectorAll('.game-container');
-  const refreshBtn = document.getElementById('refresh-btn');
-  const flashOverlay = document.getElementById('eink-flash');
-  const timeDisplay = document.getElementById('current-time');
-
-  // --- E-INK REFRESH SIMULATION ---
-  function triggerEinkRefresh() {
-    flashOverlay.classList.add('flash-active');
-    setTimeout(() => {
-      flashOverlay.classList.remove('flash-active');
-    }, 400);
-  }
-
-  refreshBtn.addEventListener('click', triggerEinkRefresh);
-
-  // --- CLOCK ---
-  function updateClock() {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    timeDisplay.textContent = `${hours}:${minutes}`;
-  }
-  setInterval(updateClock, 10000);
-  updateClock();
+  // --- THEME TOGGLE ---
+  const themeToggle = document.getElementById('theme-toggle');
+  themeToggle.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    if (currentTheme === 'dark') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  });
 
   // --- NAVIGATION ---
+  const navButtons = document.querySelectorAll('.nav-btn');
+  const gameSections = document.querySelectorAll('.game-section');
+
   navButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-      const target = btn.getAttribute('data-target');
       navButtons.forEach(b => b.classList.remove('active'));
-      sections.forEach(s => s.classList.remove('active'));
+      gameSections.forEach(s => s.classList.remove('active'));
 
       btn.classList.add('active');
-      document.getElementById(target).classList.add('active');
-      
-      // Simulate e-ink refresh on page change
-      triggerEinkRefresh();
+      const gameId = btn.getAttribute('data-game');
+      document.getElementById(`game-${gameId}`).classList.add('active');
+
+      // Initialize game if needed
+      if (gameId === 'sudoku') initSudoku();
+      if (gameId === 'mines') initMines();
+      if (gameId === 'wordle') initWordle();
+      if (gameId === 'tictactoe') initTTT();
     });
   });
 
-  // --- GAME SELECTOR ---
-  gameTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const targetGame = tab.getAttribute('data-game');
-      gameTabs.forEach(t => t.classList.remove('active'));
-      gameContainers.forEach(c => c.classList.remove('active'));
+  // --- GAME 1: SUDOKU ---
+  let sudokuSelectedCell = null;
+  const sudokuGrid = document.getElementById('sudoku-grid');
+  const sudokuStatus = document.getElementById('sudoku-status');
 
-      tab.classList.add('active');
-      document.getElementById(`game-${targetGame}`).classList.add('active');
-      
-      triggerEinkRefresh();
-      if (targetGame === 'binairo') initBinairo();
-      if (targetGame === 'rogue') initRogue();
-    });
-  });
-
-  // ==========================================
-  // GAME 1: BINAIRO (BINARY PUZZLE)
-  // ==========================================
-  const binairoBoard = document.getElementById('binairo-board');
-  const checkBinairoBtn = document.getElementById('check-binairo');
-  const resetBinairoBtn = document.getElementById('reset-binairo');
-  const binairoFeedback = document.getElementById('binairo-feedback');
-
-  // Simple 6x6 puzzle template (0 = White, 1 = Black, null = Empty)
-  const binairoSolution = [
-    [1, 0, 1, 0, 0, 1],
-    [0, 1, 0, 1, 1, 0],
-    [1, 1, 0, 0, 1, 0],
-    [0, 0, 1, 1, 0, 1],
-    [1, 0, 1, 0, 1, 0],
-    [0, 1, 0, 1, 0, 1]
+  // Simple static boards for E-Ink simplicity
+  const sudokuBoards = [
+    {
+      start: [
+        5,3,0,0,7,0,0,0,0,
+        6,0,0,1,9,5,0,0,0,
+        0,9,8,0,0,0,0,6,0,
+        8,0,0,0,6,0,0,0,3,
+        4,0,0,8,0,3,0,0,1,
+        7,0,0,0,2,0,0,0,6,
+        0,6,0,0,0,0,2,8,0,
+        0,0,0,4,1,9,0,0,5,
+        0,0,0,0,8,0,0,7,9
+      ],
+      solution: [
+        5,3,4,6,7,8,9,1,2,
+        6,7,2,1,9,5,3,4,8,
+        1,9,8,3,4,2,5,6,7,
+        8,5,9,7,6,1,4,2,3,
+        4,2,6,8,5,3,7,9,1,
+        7,1,3,9,2,4,8,5,6,
+        9,6,5,2,3,7,1,8,4,
+        2,8,7,4,1,9,6,3,5,
+        3,4,1,5,8,6,2,7,9
+      ]
+    },
+    {
+      start: [
+        0,0,0,2,6,0,7,0,1,
+        6,8,0,0,7,0,0,9,0,
+        1,9,0,0,0,4,5,0,0,
+        8,2,0,1,0,0,0,4,0,
+        0,0,4,6,0,2,9,0,0,
+        0,5,0,0,0,3,0,2,8,
+        0,0,9,3,0,0,0,7,4,
+        0,4,0,0,5,0,0,3,6,
+        7,0,3,0,1,8,0,0,0
+      ],
+      solution: [
+        4,3,5,2,6,9,7,8,1,
+        6,8,2,5,7,1,4,9,3,
+        1,9,7,8,3,4,5,6,2,
+        8,2,6,1,9,5,3,4,7,
+        3,7,4,6,8,2,9,1,5,
+        9,5,1,7,4,3,6,2,8,
+        5,1,9,3,2,6,8,7,4,
+        2,4,8,9,5,7,1,3,6,
+        7,6,3,4,1,8,2,5,9
+      ]
+    }
   ];
 
-  const binairoInitial = [
-    [1, null, null, 0, null, 1],
-    [null, 1, null, null, 1, null],
-    [1, null, 0, null, null, 0],
-    [null, 0, null, 1, null, null],
-    [null, null, 1, null, 1, null],
-    [0, null, null, 1, null, 1]
-  ];
+  let currentSudoku = null;
+  let userSudoku = [];
 
-  function initBinairo() {
-    binairoBoard.innerHTML = '';
-    state.binairoGrid = JSON.parse(JSON.stringify(binairoInitial));
-    binairoFeedback.textContent = '';
-
-    for (let r = 0; r < 6; r++) {
-      for (let c = 0; c < 6; c++) {
-        const cell = document.createElement('div');
-        cell.classList.add('binairo-cell');
-        
-        const val = state.binairoGrid[r][c];
-        if (val !== null) {
-          cell.textContent = val === 1 ? '⬛' : '⬜';
-          cell.classList.add('locked');
-        } else {
-          cell.textContent = '';
-          cell.addEventListener('click', () => toggleBinairoCell(r, c, cell));
-        }
-        binairoBoard.appendChild(cell);
-      }
-    }
-  }
-
-  function toggleBinairoCell(r, c, cellElement) {
-    let currentVal = state.binairoGrid[r][c];
-    if (currentVal === null) {
-      state.binairoGrid[r][c] = 0; // White
-      cellElement.textContent = '⬜';
-    } else if (currentVal === 0) {
-      state.binairoGrid[r][c] = 1; // Black
-      cellElement.textContent = '⬛';
-    } else {
-      state.binairoGrid[r][c] = null; // Empty
-      cellElement.textContent = '';
-    }
-  }
-
-  checkBinairoBtn.addEventListener('click', () => {
-    let correct = true;
-    let complete = true;
-
-    for (let r = 0; r < 6; r++) {
-      for (let c = 0; c < 6; c++) {
-        if (state.binairoGrid[r][c] === null) {
-          complete = false;
-        } else if (state.binairoGrid[r][c] !== binairoSolution[r][c]) {
-          correct = false;
-        }
-      }
-    }
-
-    if (!complete) {
-      binairoFeedback.textContent = 'Grille incomplète !';
-    } else if (correct) {
-      binairoFeedback.textContent = 'Félicitations ! Grille correcte.';
-    } else {
-      binairoFeedback.textContent = 'Il y a des erreurs dans la grille.';
-    }
-  });
-
-  resetBinairoBtn.addEventListener('click', initBinairo);
-
-  // ==========================================
-  // GAME 2: E-INK QUEST (MICRO-ROGUE)
-  // ==========================================
-  const rogueBoard = document.getElementById('rogue-board');
-  const rogueStepsDisp = document.getElementById('rogue-steps');
-  const rogueStatusDisp = document.getElementById('rogue-status');
-  const resetRogueBtn = document.getElementById('reset-rogue');
-  const GRID_SIZE = 8;
-
-  function initRogue() {
-    state.roguePlayer = { x: 0, y: 7 };
-    state.rogueKey = { x: 4, y: 2 };
-    state.rogueDoor = { x: 7, y: 0 };
-    state.rogueTraps = [
-      { x: 2, y: 5 }, { x: 5, y: 5 }, { x: 3, y: 3 }, { x: 6, y: 2 }
-    ];
-    state.rogueSteps = 0;
-    state.rogueGameOver = false;
-    state.hasKey = false;
+  function initSudoku() {
+    sudokuGrid.innerHTML = '';
+    sudokuSelectedCell = null;
+    sudokuStatus.textContent = 'Remplissez la grille';
     
-    rogueStepsDisp.textContent = '0';
-    rogueStatusDisp.textContent = 'En exploration...';
-    renderRogueBoard();
-  }
+    // Pick random board
+    currentSudoku = sudokuBoards[Math.floor(Math.random() * sudokuBoards.length)];
+    userSudoku = [...currentSudoku.start];
 
-  function renderRogueBoard() {
-    rogueBoard.innerHTML = '';
-    for (let y = 0; y < GRID_SIZE; y++) {
-      for (let x = 0; x < GRID_SIZE; x++) {
-        const cell = document.createElement('div');
-        cell.classList.add('rogue-cell');
+    for (let i = 0; i < 81; i++) {
+      const cell = document.createElement('div');
+      cell.classList.add('sudoku-cell');
+      cell.dataset.index = i;
 
-        if (state.roguePlayer.x === x && state.roguePlayer.y === y) {
-          cell.textContent = '▲'; // Player
-        } else if (state.rogueDoor.x === x && state.rogueDoor.y === y) {
-          cell.textContent = state.hasKey ? '🔓' : '🚪';
-        } else if (state.rogueKey.x === x && state.rogueKey.y === y && !state.hasKey) {
-          cell.textContent = '🔑';
-        } else if (state.rogueTraps.some(t => t.x === x && t.y === y)) {
-          cell.textContent = '☠️';
-        } else {
-          cell.textContent = '·';
-        }
-        rogueBoard.appendChild(cell);
+      if (currentSudoku.start[i] !== 0) {
+        cell.textContent = currentSudoku.start[i];
+        cell.classList.add('fixed');
+      } else {
+        cell.textContent = '';
+        cell.addEventListener('click', () => selectSudokuCell(cell));
       }
+      sudokuGrid.appendChild(cell);
     }
   }
 
-  function movePlayer(dx, dy) {
-    if (state.rogueGameOver) return;
-
-    const newX = state.roguePlayer.x + dx;
-    const newY = state.roguePlayer.y + dy;
-
-    // Boundary check
-    if (newX >= 0 && newX < GRID_SIZE && newY >= 0 && newY < GRID_SIZE) {
-      state.roguePlayer.x = newX;
-      state.roguePlayer.y = newY;
-      state.rogueSteps++;
-      rogueStepsDisp.textContent = state.rogueSteps;
-
-      // Check Key
-      if (state.roguePlayer.x === state.rogueKey.x && state.roguePlayer.y === state.rogueKey.y && !state.hasKey) {
-        state.hasKey = true;
-        rogueStatusDisp.textContent = 'Clé trouvée ! Allez à la porte.';
-      }
-
-      // Check Trap
-      if (state.rogueTraps.some(t => t.x === state.roguePlayer.x && t.y === state.roguePlayer.y)) {
-        state.rogueGameOver = true;
-        rogueStatusDisp.textContent = 'Perdu ! Vous avez touché un piège.';
-      }
-
-      // Check Door
-      if (state.roguePlayer.x === state.rogueDoor.x && state.roguePlayer.y === state.rogueDoor.y) {
-        if (state.hasKey) {
-          state.rogueGameOver = true;
-          rogueStatusDisp.textContent = `Gagné en ${state.rogueSteps} pas !`;
-        } else {
-          rogueStatusDisp.textContent = 'La porte est fermée. Trouvez la clé !';
-        }
-      }
-
-      renderRogueBoard();
-    }
+  function selectSudokuCell(cell) {
+    const cells = document.querySelectorAll('.sudoku-cell');
+    cells.forEach(c => c.classList.remove('selected'));
+    
+    sudokuSelectedCell = cell;
+    cell.classList.add('selected');
   }
 
-  // D-Pad Event Listeners
-  document.getElementById('btn-up').addEventListener('click', () => movePlayer(0, -1));
-  document.getElementById('btn-down').addEventListener('click', () => movePlayer(0, 1));
-  document.getElementById('btn-left').addEventListener('click', () => movePlayer(-1, 0));
-  document.getElementById('btn-right').addEventListener('click', () => movePlayer(1, 0));
-  resetRogueBtn.addEventListener('click', initRogue);
+  // Keypad controls
+  document.querySelectorAll('.keypad-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!sudokuSelectedCell) return;
+      const val = btn.getAttribute('data-val');
+      const idx = parseInt(sudokuSelectedCell.dataset.index);
 
-  // Keyboard support for Rogue
-  document.addEventListener('keydown', (e) => {
-    if (document.getElementById('games-section').classList.contains('active') && 
-        document.getElementById('game-rogue').classList.contains('active')) {
-      if (e.key === 'ArrowUp') movePlayer(0, -1);
-      if (e.key === 'ArrowDown') movePlayer(0, 1);
-      if (e.key === 'ArrowLeft') movePlayer(-1, 0);
-      if (e.key === 'ArrowRight') movePlayer(1, 0);
+      if (val === 'clear') {
+        sudokuSelectedCell.textContent = '';
+        userSudoku[idx] = 0;
+      } else {
+        sudokuSelectedCell.textContent = val;
+        userSudoku[idx] = parseInt(val);
+      }
+    });
+  });
+
+  document.getElementById('sudoku-new').addEventListener('click', initSudoku);
+  document.getElementById('sudoku-check').addEventListener('click', () => {
+    let correct = true;
+    for (let i = 0; i < 81; i++) {
+      if (userSudoku[i] !== currentSudoku.solution[i]) {
+        correct = false;
+        break;
+      }
+    }
+    if (correct) {
+      sudokuStatus.textContent = 'Félicitations ! Grille correcte.';
+    } else {
+      sudokuStatus.textContent = 'Il y a des erreurs...';
     }
   });
 
-  // ==========================================
-  // GAME 3: HAIKU CREATOR
-  // ==========================================
-  const haikuWords = document.getElementById('haiku-words');
-  const newInspirationBtn = document.getElementById('new-inspiration-btn');
-  const saveHaikuBtn = document.getElementById('save-haiku-btn');
-  const clearHaikuBtn = document.getElementById('clear-haiku-btn');
-  const haikuFeedback = document.getElementById('haiku-feedback');
 
-  const inspirations = [
-    ['Silence', 'Vent', 'Ombre'],
-    ['Lune', 'Rivière', 'Brume'],
-    ['Neige', 'Corbeau', 'Froid'],
-    ['Fleur', 'Rosée', 'Matin'],
-    ['Automne', 'Feuille', 'Chemin']
-  ];
+  // --- GAME 2: MINESWEEPER ---
+  const minesGrid = document.getElementById('mines-grid');
+  const minesStatus = document.getElementById('mines-status');
+  const minesModeToggle = document.getElementById('mines-mode-toggle');
+  
+  let minesWidth = 9;
+  let minesCount = 10;
+  let minesBoard = [];
+  let minesRevealed = [];
+  let minesFlagged = [];
+  let minesGameOver = false;
+  let flagMode = false; // Toggle for mobile/touch friendly flagging
 
-  function generateInspiration() {
-    const rand = inspirations[Math.floor(Math.random() * inspirations.length)];
-    haikuWords.textContent = rand.join(', ');
+  minesModeToggle.addEventListener('click', () => {
+    flagMode = !flagMode;
+    minesModeToggle.textContent = flagMode ? 'Mode: Drapeau' : 'Mode: Découvrir';
+    minesModeToggle.classList.toggle('active', flagMode);
+  });
+
+  function initMines() {
+    minesGrid.innerHTML = '';
+    minesBoard = Array(minesWidth * minesWidth).fill(0);
+    minesRevealed = Array(minesWidth * minesWidth).fill(false);
+    minesFlagged = Array(minesWidth * minesWidth).fill(false);
+    minesGameOver = false;
+    minesStatus.textContent = `Mines: ${minesCount}`;
+
+    // Place mines
+    let placedMines = 0;
+    while (placedMines < minesCount) {
+      let idx = Math.floor(Math.random() * (minesWidth * minesWidth));
+      if (minesBoard[idx] !== 'M') {
+        minesBoard[idx] = 'M';
+        placedMines++;
+      }
+    }
+
+    // Calculate numbers
+    for (let i = 0; i < minesWidth * minesWidth; i++) {
+      if (minesBoard[i] === 'M') continue;
+      let count = 0;
+      let neighbors = getNeighbors(i);
+      neighbors.forEach(n => {
+        if (minesBoard[n] === 'M') count++;
+      });
+      minesBoard[i] = count;
+    }
+
+    // Render grid
+    for (let i = 0; i < minesWidth * minesWidth; i++) {
+      const cell = document.createElement('div');
+      cell.classList.add('mines-cell');
+      cell.dataset.index = i;
+      
+      cell.addEventListener('click', () => handleMinesClick(i));
+      // Support right click for flagging on desktop
+      cell.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        toggleFlag(i);
+      });
+
+      minesGrid.appendChild(cell);
+    }
   }
 
-  newInspirationBtn.addEventListener('click', generateInspiration);
-  
-  saveHaikuBtn.addEventListener('click', () => {
-    const l1 = document.getElementById('haiku-line1').value.trim();
-    const l2 = document.getElementById('haiku-line2').value.trim();
-    const l3 = document.getElementById('haiku-line3').value.trim();
+  function getNeighbors(idx) {
+    let neighbors = [];
+    let row = Math.floor(idx / minesWidth);
+    let col = idx % minesWidth;
 
-    if (!l1 || !l2 || !l3) {
-      haikuFeedback.textContent = 'Veuillez remplir les 3 vers.';
+    for (let r = -1; r <= 1; r++) {
+      for (let c = -1; c <= 1; c++) {
+        if (r === 0 && c === 0) continue;
+        let newRow = row + r;
+        let newCol = col + c;
+        if (newRow >= 0 && newRow < minesWidth && newCol >= 0 && newCol < minesWidth) {
+          neighbors.push(newRow * minesWidth + newCol);
+        }
+      }
+    }
+    return neighbors;
+  }
+
+  function handleMinesClick(idx) {
+    if (minesGameOver || minesRevealed[idx]) return;
+
+    if (flagMode) {
+      toggleFlag(idx);
       return;
     }
 
-    const fullHaiku = `Haiku :
-${l1}
-${l2}
-${l3}`;
-    saveNoteToStorage(fullHaiku);
-    haikuFeedback.textContent = 'Haiku enregistré dans votre Journal !';
+    if (minesFlagged[idx]) return;
+
+    if (minesBoard[idx] === 'M') {
+      // Game Over
+      revealAllMines();
+      minesStatus.textContent = 'Perdu !';
+      minesGameOver = true;
+    } else {
+      revealCell(idx);
+      checkMinesWin();
+    }
+  }
+
+  function toggleFlag(idx) {
+    if (minesGameOver || minesRevealed[idx]) return;
+    minesFlagged[idx] = !minesFlagged[idx];
+    const cell = minesGrid.children[idx];
+    if (minesFlagged[idx]) {
+      cell.classList.add('flagged');
+      cell.textContent = 'F';
+    } else {
+      cell.classList.remove('flagged');
+      cell.textContent = '';
+    }
+  }
+
+  function revealCell(idx) {
+    if (minesRevealed[idx] || minesFlagged[idx]) return;
+    minesRevealed[idx] = true;
+    const cell = minesGrid.children[idx];
+    cell.classList.add('revealed');
     
-    // Clear inputs
-    document.getElementById('haiku-line1').value = '';
-    document.getElementById('haiku-line2').value = '';
-    document.getElementById('haiku-line3').value = '';
-  });
-
-  clearHaikuBtn.addEventListener('click', () => {
-    document.getElementById('haiku-line1').value = '';
-    document.getElementById('haiku-line2').value = '';
-    document.getElementById('haiku-line3').value = '';
-    haikuFeedback.textContent = '';
-  });
-
-  // ==========================================
-  // READER UTILITY
-  // ==========================================
-  const textSelector = document.getElementById('text-selector');
-  const readerContent = document.getElementById('reader-content');
-  const increaseFontBtn = document.getElementById('increase-font');
-  const decreaseFontBtn = document.getElementById('decrease-font');
-
-  const texts = {
-    pensee: `"Tout ce qui arrive arrive de manière juste. Tu le trouveras si tu observes avec attention. Je ne dis pas seulement selon la suite des choses, mais selon la justice, et comme si quelqu'un distribuait à chacun selon son mérite."
-
-"Ne te laisse pas distraire par les événements extérieurs ! Prends le temps d'apprendre quelque chose de bon et cesse de papillonner."
-
-- Marc Aurèle, Pensées pour moi-même`,
-    corbeau: `Une fois, sur le minuit lugubre, tandis que je méditais, faible et fatigué, sur maint précieux et curieux volume d’une doctrine oubliée, tandis que je balançais la tête, presque endormi, soudain il se fit un tapotement, comme de quelqu’un frappant doucement, frappant à la porte de ma chambre.
-
-« C’est quelque visiteur », murmurai-je, « qui frappe à la porte de ma chambre, — cela seul, et rien de plus. »
-
-- Edgar Allan Poe, Le Corbeau`,
-    "art-guerre": `"L'art de la guerre, c'est de soumettre l'ennemi sans combat."
-
-"Connais ton ennemi et connais-toi toi-même ; eusses-tu cent combats à soutenir, cent fois tu serais victorieux."
-
-"Au milieu du chaos, il y a aussi une opportunité."
-
-- Sun Tzu, L'Art de la Guerre`
-  };
-
-  function loadText() {
-    const selected = textSelector.value;
-    readerContent.textContent = texts[selected] || '';
+    if (minesBoard[idx] > 0) {
+      cell.textContent = minesBoard[idx];
+    } else {
+      cell.textContent = '';
+      // Cascade reveal
+      let neighbors = getNeighbors(idx);
+      neighbors.forEach(n => revealCell(n));
+    }
   }
 
-  textSelector.addEventListener('change', loadText);
-  
-  increaseFontBtn.addEventListener('click', () => {
-    state.fontSize += 2;
-    readerContent.style.fontSize = `${state.fontSize}px`;
-  });
-
-  decreaseFontBtn.addEventListener('click', () => {
-    if (state.fontSize > 12) {
-      state.fontSize -= 2;
-      readerContent.style.fontSize = `${state.fontSize}px`;
+  function revealAllMines() {
+    for (let i = 0; i < minesWidth * minesWidth; i++) {
+      if (minesBoard[i] === 'M') {
+        const cell = minesGrid.children[i];
+        cell.classList.add('mine');
+        cell.textContent = '💣';
+      }
     }
-  });
-
-  // ==========================================
-  // JOURNAL UTILITY
-  // ==========================================
-  const journalInput = document.getElementById('journal-input');
-  const saveNoteBtn = document.getElementById('save-note-btn');
-  const clearNotesBtn = document.getElementById('clear-notes-btn');
-  const savedNotesList = document.getElementById('saved-notes-list');
-
-  function saveNoteToStorage(text) {
-    const notes = JSON.parse(localStorage.getItem('eink_notes') || '[]');
-    notes.unshift({
-      id: Date.now(),
-      date: new Date().toLocaleString('fr-FR'),
-      content: text
-    });
-    localStorage.setItem('eink_notes', JSON.stringify(notes));
-    renderNotes();
   }
 
-  saveNoteBtn.addEventListener('click', () => {
-    const text = journalInput.value.trim();
-    if (text) {
-      saveNoteToStorage(text);
-      journalInput.value = '';
+  function checkMinesWin() {
+    let win = true;
+    for (let i = 0; i < minesWidth * minesWidth; i++) {
+      if (minesBoard[i] !== 'M' && !minesRevealed[i]) {
+        win = false;
+        break;
+      }
     }
-  });
-
-  clearNotesBtn.addEventListener('click', () => {
-    if (confirm('Voulez-vous vraiment supprimer toutes vos notes ?')) {
-      localStorage.removeItem('eink_notes');
-      renderNotes();
+    if (win) {
+      minesStatus.textContent = 'Gagné !';
+      minesGameOver = true;
     }
-  });
+  }
 
-  function renderNotes() {
-    savedNotesList.innerHTML = '';
-    const notes = JSON.parse(localStorage.getItem('eink_notes') || '[]');
-    notes.forEach(note => {
-      const noteEl = document.createElement('div');
-      noteEl.classList.add('note-item');
-      noteEl.innerHTML = `
-        <div class="note-date">${note.date}</div>
-        <div style="white-space: pre-line;">${note.content}</div>
-        <button class="delete-note" data-id="${note.id}">✕</button>
-      `;
-      savedNotesList.appendChild(noteEl);
-    });
+  document.getElementById('mines-reset').addEventListener('click', initMines);
 
-    // Add delete listeners
-    document.querySelectorAll('.delete-note').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const id = parseInt(e.target.getAttribute('data-id'));
-        let notes = JSON.parse(localStorage.getItem('eink_notes') || '[]');
-        notes = notes.filter(n => n.id !== id);
-        localStorage.setItem('eink_notes', JSON.stringify(notes));
-        renderNotes();
+
+  // --- GAME 3: WORDLE (LE MOT) ---
+  const wordleGrid = document.getElementById('wordle-grid');
+  const wordleKeyboard = document.getElementById('wordle-keyboard');
+  const wordleStatus = document.getElementById('wordle-status');
+
+  const wordList = ['LIVRE', 'TARTE', 'TABLE', 'CHAMP', 'PORTE', 'IMAGE', 'TEMPS', 'GRAND', 'PETIT', 'ROUGE', 'BLEUX', 'JAUNE', 'VERTE', 'PLAGE', 'ARBRE', 'SOLEI', 'PLUIE', 'NEIGE', 'ROUTE', 'FORGE'];
+  let targetWord = '';
+  let currentGuess = '';
+  let wordleRowIndex = 0;
+  let wordleGameOver = false;
+
+  function initWordle() {
+    wordleGrid.innerHTML = '';
+    wordleKeyboard.innerHTML = '';
+    wordleGameOver = false;
+    currentGuess = '';
+    wordleRowIndex = 0;
+    targetWord = wordList[Math.floor(Math.random() * wordList.length)];
+    wordleStatus.textContent = 'Devinez le mot en 6 essais';
+
+    // Create grid rows
+    for (let r = 0; r < 6; r++) {
+      const row = document.createElement('div');
+      row.classList.add('wordle-row');
+      for (let c = 0; c < 5; c++) {
+        const cell = document.createElement('div');
+        cell.classList.add('wordle-cell');
+        row.appendChild(cell);
+      }
+      wordleGrid.appendChild(row);
+    }
+
+    // Create keyboard
+    const keys = [
+      ['A', 'Z', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+      ['Q', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M'],
+      ['ENTRER', 'W', 'X', 'C', 'V', 'B', 'N', 'EFFACER']
+    ];
+
+    keys.forEach(rowKeys => {
+      const row = document.createElement('div');
+      row.classList.add('keyboard-row');
+      rowKeys.forEach(key => {
+        const keyBtn = document.createElement('button');
+        keyBtn.textContent = key;
+        keyBtn.classList.add('key');
+        if (key === 'ENTRER' || key === 'EFFACER') {
+          keyBtn.classList.add('wide');
+        }
+        keyBtn.addEventListener('click', () => handleWordleInput(key));
+        row.appendChild(keyBtn);
       });
+      wordleKeyboard.appendChild(row);
     });
   }
 
-  // ==========================================
-  // TOOLS: POMODORO & THEMES
-  // ==========================================
-  const pomoDisplay = document.getElementById('pomo-display');
-  const pomoStart = document.getElementById('pomo-start');
-  const pomoPause = document.getElementById('pomo-pause');
-  const pomoReset = document.getElementById('pomo-reset');
+  function handleWordleInput(key) {
+    if (wordleGameOver) return;
 
-  function updatePomoDisplay() {
-    const mins = String(Math.floor(state.pomoTime / 60)).padStart(2, '0');
-    const secs = String(state.pomoTime % 60).padStart(2, '0');
-    pomoDisplay.textContent = `${mins}:${secs}`;
-  }
+    const currentRow = wordleGrid.children[wordleRowIndex];
 
-  pomoStart.addEventListener('click', () => {
-    if (state.pomoRunning) return;
-    state.pomoRunning = true;
-    state.pomoInterval = setInterval(() => {
-      if (state.pomoTime > 0) {
-        state.pomoTime--;
-        updatePomoDisplay();
+    if (key === 'EFFACER') {
+      if (currentGuess.length > 0) {
+        currentGuess = currentGuess.slice(0, -1);
+        updateWordleRow(currentRow);
+      }
+    } else if (key === 'ENTRER') {
+      if (currentGuess.length === 5) {
+        submitWordleGuess(currentRow);
       } else {
-        clearInterval(state.pomoInterval);
-        state.pomoRunning = false;
-        alert('Session de concentration terminée ! Prenez une pause.');
-        state.pomoTime = 1500;
-        updatePomoDisplay();
+        wordleStatus.textContent = 'Pas assez de lettres';
       }
-    }, 1000);
-  });
-
-  pomoPause.addEventListener('click', () => {
-    clearInterval(state.pomoInterval);
-    state.pomoRunning = false;
-  });
-
-  pomoReset.addEventListener('click', () => {
-    clearInterval(state.pomoInterval);
-    state.pomoRunning = false;
-    state.pomoTime = 1500;
-    updatePomoDisplay();
-  });
-
-  // Theme Switcher
-  const themeRadios = document.querySelectorAll('input[name="theme-select"]');
-  themeRadios.forEach(radio => {
-    radio.addEventListener('change', (e) => {
-      const theme = e.target.value;
-      document.body.className = ''; // Reset
-      if (theme !== 'classic-eink') {
-        document.body.classList.add(`theme-${theme}`);
+    } else {
+      if (currentGuess.length < 5) {
+        currentGuess += key;
+        updateWordleRow(currentRow);
       }
-      triggerEinkRefresh();
+    }
+  }
+
+  function updateWordleRow(row) {
+    for (let i = 0; i < 5; i++) {
+      const cell = row.children[i];
+      cell.textContent = currentGuess[i] || '';
+    }
+  }
+
+  function submitWordleGuess(row) {
+    let tempTarget = targetWord;
+    let guess = currentGuess;
+
+    // First pass: mark correct letters
+    for (let i = 0; i < 5; i++) {
+      const cell = row.children[i];
+      const letter = guess[i];
+      if (letter === targetWord[i]) {
+        cell.classList.add('correct');
+        tempTarget = tempTarget.replace(letter, '_');
+      }
+    }
+
+    // Second pass: mark present/absent
+    for (let i = 0; i < 5; i++) {
+      const cell = row.children[i];
+      if (cell.classList.contains('correct')) continue;
+
+      const letter = guess[i];
+      if (tempTarget.includes(letter)) {
+        cell.classList.add('present');
+        tempTarget = tempTarget.replace(letter, '_');
+      } else {
+        cell.classList.add('absent');
+      }
+    }
+
+    if (guess === targetWord) {
+      wordleStatus.textContent = 'Gagné ! Bravo !';
+      wordleGameOver = true;
+    } else {
+      wordleRowIndex++;
+      currentGuess = '';
+      if (wordleRowIndex === 6) {
+        wordleStatus.textContent = `Perdu ! Le mot était : ${targetWord}`;
+        wordleGameOver = true;
+      } else {
+        wordleStatus.textContent = 'Essayez encore...';
+      }
+    }
+  }
+
+  document.getElementById('wordle-reset').addEventListener('click', initWordle);
+
+
+  // --- GAME 4: TIC TAC TOE (MORPION) ---
+  const tttGrid = document.getElementById('ttt-grid');
+  const tttStatus = document.getElementById('ttt-status');
+  let tttBoard = Array(9).fill('');
+  let tttGameOver = false;
+
+  function initTTT() {
+    tttGrid.innerHTML = '';
+    tttBoard = Array(9).fill('');
+    tttGameOver = false;
+    tttStatus.textContent = 'À vous de jouer (X)';
+
+    for (let i = 0; i < 9; i++) {
+      const cell = document.createElement('div');
+      cell.classList.add('ttt-cell');
+      cell.dataset.index = i;
+      cell.addEventListener('click', () => handleTTTClick(i));
+      tttGrid.appendChild(cell);
+    }
+  }
+
+  function handleTTTClick(idx) {
+    if (tttGameOver || tttBoard[idx] !== '') return;
+
+    // Player Move
+    makeTTTMove(idx, 'X');
+    if (checkTTTWin('X')) {
+      tttStatus.textContent = 'Vous avez gagné !';
+      tttGameOver = true;
+      return;
+    }
+    if (tttBoard.every(cell => cell !== '')) {
+      tttStatus.textContent = 'Match nul !';
+      tttGameOver = true;
+      return;
+    }
+
+    // AI Move
+    tttStatus.textContent = 'L\'ordinateur réfléchit...';
+    setTimeout(() => {
+      makeAIMove();
+    }, 200);
+  }
+
+  function makeTTTMove(idx, player) {
+    tttBoard[idx] = player;
+    tttGrid.children[idx].textContent = player;
+  }
+
+  function makeAIMove() {
+    if (tttGameOver) return;
+
+    // Simple AI: Try to win, block player, or pick random
+    let bestMove = findWinningMove('O') || findWinningMove('X') || pickRandomMove();
+
+    if (bestMove !== null) {
+      makeTTTMove(bestMove, 'O');
+      if (checkTTTWin('O')) {
+        tttStatus.textContent = 'L\'ordinateur a gagné !';
+        tttGameOver = true;
+        return;
+      }
+      if (tttBoard.every(cell => cell !== '')) {
+        tttStatus.textContent = 'Match nul !';
+        tttGameOver = true;
+        return;
+      }
+      tttStatus.textContent = 'À vous de jouer (X)';
+    }
+  }
+
+  function findWinningMove(player) {
+    const winPatterns = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6]
+    ];
+
+    for (let pattern of winPatterns) {
+      let count = 0;
+      let emptyIdx = null;
+      pattern.forEach(idx => {
+        if (tttBoard[idx] === player) count++;
+        else if (tttBoard[idx] === '') emptyIdx = idx;
+      });
+      if (count === 2 && emptyIdx !== null) {
+        return emptyIdx;
+      }
+    }
+    return null;
+  }
+
+  function pickRandomMove() {
+    let available = [];
+    tttBoard.forEach((cell, idx) => {
+      if (cell === '') available.push(idx);
     });
-  });
+    if (available.length === 0) return null;
+    return available[Math.floor(Math.random() * available.length)];
+  }
 
-  // --- INITIALIZATION ---
-  initBinairo();
-  initRogue();
-  generateInspiration();
-  loadText();
-  renderNotes();
-  updatePomoDisplay();
+  function checkTTTWin(player) {
+    const winPatterns = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6]
+    ];
+    return winPatterns.some(pattern => {
+      return pattern.every(idx => tttBoard[idx] === player);
+    });
+  }
+
+  document.getElementById('ttt-reset').addEventListener('click', initTTT);
+
+
+  // --- INITIAL LAUNCH ---
+  initSudoku();
 });
 
 // --- SERVICE WORKER REGISTRATION ---
@@ -501,6 +575,6 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js')
       .then(reg => console.log('Service Worker enregistré !', reg))
-      .catch(err => console.log('Erreur d\'enregistrement du Service Worker :', err));
+      .catch(err => console.warn('Erreur d\'enregistrement du Service Worker', err));
   });
 }

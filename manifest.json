@@ -1,21 +1,21 @@
 {
-  "name": "E-Ink Hub",
-  "short_name": "E-Ink Hub",
-  "description": "Un espace minimaliste de jeux et d'outils inspiré des écrans à encre électronique.",
+  "name": "E-Ink Games Hub",
+  "short_name": "E-Ink Games",
+  "description": "Un hub de jeux minimalistes et à haut contraste optimisé pour liseuses et écrans E-Ink.",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#f4f4f0",
-  "theme_color": "#2b2b2b",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=192&q=80",
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='192' height='192' viewBox='0 0 192 192'><rect width='192' height='192' fill='white' stroke='black' stroke-width='10'/><text x='50%' y='55%' font-family='sans-serif' font-size='80' font-weight='bold' fill='black' dominant-baseline='middle' text-anchor='middle'>JEU</text></svg>",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/svg+xml"
     },
     {
-      "src": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=512&q=80",
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='512' height='512' viewBox='0 0 512 512'><rect width='512' height='512' fill='white' stroke='black' stroke-width='20'/><text x='50%' y='55%' font-family='sans-serif' font-size='200' font-weight='bold' fill='black' dominant-baseline='middle' text-anchor='middle'>JEUX</text></svg>",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/svg+xml"
     }
   ]
 }

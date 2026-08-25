@@ -1,4 +1,4 @@
-const CACHE_NAME = 'eink-hub-v2';
+const CACHE_NAME = 'eink-games-v1';
 const ASSETS = [
   'index.html',
   'style.css',
