@@ -1,884 +1,698 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Core State & Navigation ---
-    const state = {
-        currentView: 'dashboard',
-        sudoku: {
-            grid: Array(81).fill(0),
-            solution: Array(81).fill(0),
-            initial: Array(81).fill(0),
-            selectedCell: null
-        },
-        wordle: {
-            secret: '',
-            guesses: [],
-            currentGuess: '',
-            maxGuesses: 6,
-            gameOver: false
-        },
-        mines: {
-            size: 9,
-            mineCount: 10,
-            grid: [],
-            revealed: [],
-            flagged: [],
-            gameOver: false,
-            mode: 'reveal' // 'reveal' or 'flag'
-        },
-        tictactoe: {
-            board: Array(9).fill(''),
-            gameOver: false,
-            turn: 'X'
-        },
-        chess: {
-            board: [],
-            selectedSquare: null,
-            turn: 'white',
-            validMoves: []
-        },
-        game2048: {
-            board: Array(16).fill(0),
-            score: 0,
-            gameOver: false
-        },
-        hangman: {
-            word: '',
-            guessedLetters: new Set(),
-            lives: 6,
-            gameOver: false
+  // --- STATE MANAGEMENT ---
+  const state = {
+    currentView: 'home',
+    theme: 'light',
+    hitori: {
+      level: 0,
+      grid: [],
+      userStates: [] // 0: normal, 1: shaded, 2: circled
+    },
+    binary: {
+      level: 0,
+      grid: [],
+      userGrid: [] // null, 0, 1
+    },
+    cryptogram: {
+      level: 0,
+      cipherMap: {},
+      userDecryption: {}, // cipherChar -> plainChar
+      selectedCipherChar: null
+    }
+  };
+
+  // --- DATASETS (Offline levels) ---
+  const HITORI_LEVELS = [
+    {
+      size: 5,
+      grid: [
+        [2, 2, 1, 5, 3],
+        [2, 3, 1, 4, 5],
+        [1, 1, 3, 2, 4],
+        [5, 4, 2, 3, 1],
+        [3, 5, 4, 1, 2]
+      ]
+    },
+    {
+      size: 5,
+      grid: [
+        [1, 2, 4, 1, 3],
+        [3, 4, 2, 5, 1],
+        [2, 5, 1, 3, 4],
+        [2, 1, 3, 4, 5],
+        [4, 3, 5, 2, 2]
+      ]
+    },
+    {
+      size: 5,
+      grid: [
+        [4, 1, 2, 3, 2],
+        [1, 3, 3, 2, 5],
+        [2, 2, 4, 1, 3],
+        [5, 4, 1, 3, 2],
+        [3, 2, 5, 4, 1]
+      ]
+    }
+  ];
+
+  const BINARY_LEVELS = [
+    {
+      size: 6,
+      // null represents empty cells, numbers are pre-filled
+      grid: [
+        [1, null, null, null, 0, null],
+        [null, 0, 0, null, null, 1],
+        [null, null, null, 1, null, null],
+        [0, null, 1, null, null, 0],
+        [null, 1, null, null, 0, null],
+        [null, null, 0, 0, null, null]
+      ]
+    },
+    {
+      size: 6,
+      grid: [
+        [null, 1, null, null, 1, null],
+        [null, null, 0, 0, null, null],
+        [1, null, null, null, null, 0],
+        [null, 0, null, null, 1, null],
+        [null, null, 1, 1, null, null],
+        [0, null, null, null, 0, null]
+      ]
+    },
+    {
+      size: 6,
+      grid: [
+        [0, null, null, 0, null, null],
+        [null, null, 1, null, null, 1],
+        [null, 0, null, null, 0, null],
+        [1, null, null, 1, null, null],
+        [null, null, 0, null, null, 0],
+        [0, null, null, 0, null, null]
+      ]
+    }
+  ];
+
+  const CRYPTO_LEVELS = [
+    {
+      quote: "LE SAVOIR EST LA SEULE RICHESSE QUE L'ON PEUT PARTAGER SANS L'AMOINDRIR.",
+      author: "PROVERBE"
+    },
+    {
+      quote: "RIEN NE SE PERD, RIEN NE SE CREE, TOUT SE TRANSFORME.",
+      author: "LAVOISIER"
+    },
+    {
+      quote: "LA LOGIQUE VOUS MENERA DE A A B. L'IMAGINATION VOUS EMMENERA PARTOUT.",
+      author: "EINSTEIN"
+    }
+  ];
+
+  // --- DOM ELEMENTS ---
+  const views = {
+    home: document.getElementById('view-home'),
+    hitori: document.getElementById('view-hitori'),
+    binary: document.getElementById('view-binary'),
+    cryptogram: document.getElementById('view-cryptogram'),
+    help: document.getElementById('view-help')
+  };
+
+  const themeToggle = document.getElementById('theme-toggle');
+  const btnHome = document.getElementById('btn-home');
+  const btnHelp = document.getElementById('btn-help');
+  const btnRulesBack = document.getElementById('btn-rules-back');
+
+  // --- ROUTER / VIEW NAVIGATION ---
+  function switchView(viewName) {
+    state.currentView = viewName;
+    Object.keys(views).forEach(key => {
+      if (key === viewName) {
+        views[key].classList.add('active');
+      } else {
+        views[key].classList.remove('active');
+      }
+    });
+
+    // Update nav buttons state
+    if (viewName === 'home') {
+      btnHome.classList.add('active');
+      btnHelp.classList.remove('active');
+    } else if (viewName === 'help') {
+      btnHome.classList.remove('active');
+      btnHelp.classList.add('active');
+    } else {
+      btnHome.classList.remove('active');
+      btnHelp.classList.remove('active');
+    }
+
+    // Initialize game if switched to a game view
+    if (viewName === 'hitori') initHitori();
+    if (viewName === 'binary') initBinary();
+    if (viewName === 'cryptogram') initCryptogram();
+  }
+
+  // --- THEME MANAGEMENT (E-INK FRIENDLY) ---
+  function toggleTheme() {
+    state.theme = state.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', state.theme);
+    localStorage.setItem('eink-theme', state.theme);
+  }
+
+  // Load saved theme
+  const savedTheme = localStorage.getItem('eink-theme');
+  if (savedTheme) {
+    state.theme = savedTheme;
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }
+
+  // --- EVENT LISTENERS (NAV) ---
+  themeToggle.addEventListener('click', toggleTheme);
+  btnHome.addEventListener('click', () => switchView('home'));
+  btnHelp.addEventListener('click', () => switchView('help'));
+  btnRulesBack.addEventListener('click', () => switchView('home'));
+
+  document.querySelectorAll('.game-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const game = card.getAttribute('data-game');
+      switchView(game);
+    });
+  });
+
+  document.querySelectorAll('.btn-back').forEach(btn => {
+    btn.addEventListener('click', () => switchView('home'));
+  });
+
+  // --- GAME 1: HITORI ---
+  const hitoriGridEl = document.getElementById('hitori-grid');
+  const hitoriStatusEl = document.getElementById('hitori-status');
+  const hitoriLevelIndicator = document.getElementById('hitori-level-indicator');
+
+  function initHitori() {
+    const levelData = HITORI_LEVELS[state.hitori.level];
+    hitoriLevelIndicator.textContent = `Niveau ${state.hitori.level + 1}`;
+    hitoriStatusEl.textContent = "";
+    hitoriGridEl.innerHTML = "";
+    hitoriGridEl.style.gridTemplateColumns = `repeat(${levelData.size}, 1fr)`;
+
+    state.hitori.grid = levelData.grid;
+    state.hitori.userStates = Array(levelData.size).fill(null).map(() => Array(levelData.size).fill(0));
+
+    for (let r = 0; r < levelData.size; r++) {
+      for (let c = 0; c < levelData.size; c++) {
+        const cell = document.createElement('div');
+        cell.classList.add('grid-cell');
+        cell.textContent = levelData.grid[r][c];
+        cell.dataset.row = r;
+        cell.dataset.col = c;
+
+        cell.addEventListener('click', () => {
+          let currentState = state.hitori.userStates[r][c];
+          let nextState = (currentState + 1) % 3; // 0 -> 1 -> 2 -> 0
+          state.hitori.userStates[r][c] = nextState;
+
+          cell.classList.remove('hitori-shaded', 'hitori-circled');
+          if (nextState === 1) {
+            cell.classList.add('hitori-shaded');
+          } else if (nextState === 2) {
+            cell.classList.add('hitori-circled');
+          }
+        });
+
+        hitoriGridEl.appendChild(cell);
+      }
+    }
+  }
+
+  document.getElementById('hitori-prev').addEventListener('click', () => {
+    if (state.hitori.level > 0) {
+      state.hitori.level--;
+      initHitori();
+    }
+  });
+
+  document.getElementById('hitori-next').addEventListener('click', () => {
+    if (state.hitori.level < HITORI_LEVELS.length - 1) {
+      state.hitori.level++;
+      initHitori();
+    }
+  });
+
+  document.getElementById('hitori-reset').addEventListener('click', initHitori);
+
+  document.getElementById('hitori-verify').addEventListener('click', () => {
+    const size = HITORI_LEVELS[state.hitori.level].size;
+    const grid = state.hitori.grid;
+    const states = state.hitori.userStates;
+
+    // Rule 1: No duplicate numbers in any row/col among unshaded cells
+    for (let r = 0; r < size; r++) {
+      let rowVals = {};
+      for (let c = 0; c < size; c++) {
+        if (states[r][c] !== 1) { // not shaded
+          let val = grid[r][c];
+          if (rowVals[val]) {
+            hitoriStatusEl.textContent = "Erreur : Doublon détecté sur une ligne.";
+            return;
+          }
+          rowVals[val] = true;
         }
-    };
+      }
+    }
 
-    const views = ['dashboard', 'sudoku', 'wordle', 'mines', 'tictactoe', 'chess', 'game2048', 'hangman', 'notes'];
-    const quotes = [
-        "\"Simplicity is the ultimate sophistication.\"",
-        "\"Read much, but not many books.\"",
-        "\"Focus is a matter of deciding what things you're not going to do.\"",
-        "\"The art of being wise is the art of knowing what to overlook.\"",
-        "\"In character, in manner, in style, in all things, the supreme excellence is simplicity.\""
-    ];
+    for (let c = 0; c < size; c++) {
+      let colVals = {};
+      for (let r = 0; r < size; r++) {
+        if (states[r][c] !== 1) { // not shaded
+          let val = grid[r][c];
+          if (colVals[val]) {
+            hitoriStatusEl.textContent = "Erreur : Doublon détecté sur une colonne.";
+            return;
+          }
+          colVals[val] = true;
+        }
+      }
+    }
 
-    // --- UI Elements ---
-    const btnHome = document.getElementById('btn-home');
-    const btnRefresh = document.getElementById('btn-refresh');
-    const hubTitle = document.getElementById('hub-title');
-    const currentTimeEl = document.getElementById('current-time');
-    const currentDateEl = document.getElementById('current-date');
-    const dailyQuoteEl = document.getElementById('daily-quote');
+    // Rule 2: Shaded cells cannot be adjacent horizontally or vertically
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        if (states[r][c] === 1) {
+          if (r > 0 && states[r-1][c] === 1) {
+            hitoriStatusEl.textContent = "Erreur : Deux cases noires se touchent.";
+            return;
+          }
+          if (c > 0 && states[r][c-1] === 1) {
+            hitoriStatusEl.textContent = "Erreur : Deux cases noires se touchent.";
+            return;
+          }
+        }
+      }
+    }
 
-    // --- Initialize Hub ---
-    function initHub() {
-        updateTime();
-        setInterval(updateTime, 1000);
+    // Rule 3: All unshaded cells must be connected
+    let unshadedCount = 0;
+    let startR = -1, startC = -1;
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        if (states[r][c] !== 1) {
+          unshadedCount++;
+          if (startR === -1) {
+            startR = r;
+            startC = c;
+          }
+        }
+      }
+    }
+
+    // Flood fill to check connectivity
+    let visited = Array(size).fill(null).map(() => Array(size).fill(false));
+    let queue = [[startR, startC]];
+    visited[startR][startC] = true;
+    let visitedCount = 0;
+
+    while (queue.length > 0) {
+      let [currR, currC] = queue.shift();
+      visitedCount++;
+
+      const dirs = [[-1,0], [1,0], [0,-1], [0,1]];
+      for (let [dr, dc] of dirs) {
+        let nr = currR + dr;
+        let nc = currC + dc;
+        if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+          if (!visited[nr][nc] && states[nr][nc] !== 1) {
+            visited[nr][nc] = true;
+            queue.push([nr, nc]);
+          }
+        }
+      }
+    }
+
+    if (visitedCount !== unshadedCount) {
+      hitoriStatusEl.textContent = "Erreur : Des cases blanches sont isolées.";
+      return;
+    }
+
+    hitoriStatusEl.textContent = "Félicitations ! Grille résolue avec succès.";
+  });
+
+
+  // --- GAME 2: BINARY GRID ---
+  const binaryGridEl = document.getElementById('binary-grid');
+  const binaryStatusEl = document.getElementById('binary-status');
+  const binaryLevelIndicator = document.getElementById('binary-level-indicator');
+
+  function initBinary() {
+    const levelData = BINARY_LEVELS[state.binary.level];
+    binaryLevelIndicator.textContent = `Niveau ${state.binary.level + 1}`;
+    binaryStatusEl.textContent = "";
+    binaryGridEl.innerHTML = "";
+    binaryGridEl.style.gridTemplateColumns = `repeat(${levelData.size}, 1fr)`;
+
+    state.binary.grid = levelData.grid;
+    state.binary.userGrid = levelData.grid.map(row => row.map(val => val));
+
+    for (let r = 0; r < levelData.size; r++) {
+      for (let c = 0; c < levelData.size; c++) {
+        const cell = document.createElement('div');
+        cell.classList.add('grid-cell');
         
-        // Set random quote
-        dailyQuoteEl.textContent = quotes[Math.floor(Math.random() * quotes.length)];
-
-        // Setup navigation
-        document.querySelectorAll('.app-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const target = card.getAttribute('data-target');
-                showView(target);
-            });
-        });
-
-        btnHome.addEventListener('click', () => showView('dashboard'));
-        hubTitle.addEventListener('click', () => showView('dashboard'));
-        btnRefresh.addEventListener('click', triggerScreenRefresh);
-
-        // Setup Game Initializations
-        initSudoku();
-        initWordle();
-        initMines();
-        initTicTacToe();
-        initChess();
-        init2048();
-        initHangman();
-        initNotes();
-    }
-
-    function updateTime() {
-        const now = new Date();
-        currentTimeEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        currentDateEl.textContent = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
-    }
-
-    function triggerScreenRefresh() {
-        document.body.classList.add('flash-active');
-        setTimeout(() => {
-            document.body.classList.remove('flash-active');
-        }, 400);
-    }
-
-    function showView(viewName) {
-        triggerScreenRefresh();
-        views.forEach(v => {
-            const el = document.getElementById(`view-${v}`);
-            if (el) el.classList.add('hidden');
-        });
-        document.getElementById(`view-${viewName}`).classList.remove('hidden');
-        
-        if (viewName === 'dashboard') {
-            btnHome.classList.add('hidden');
+        const initialVal = levelData.grid[r][c];
+        if (initialVal !== null) {
+          cell.classList.add('binary-fixed');
+          if (initialVal === 0) cell.classList.add('binary-zero');
+          if (initialVal === 1) cell.classList.add('binary-one');
         } else {
-            btnHome.classList.remove('hidden');
+          cell.classList.add('binary-empty');
+          cell.addEventListener('click', () => {
+            let curr = state.binary.userGrid[r][c];
+            let next = null;
+            if (curr === null) next = 0;
+            else if (curr === 0) next = 1;
+            else if (curr === 1) next = null;
+
+            state.binary.userGrid[r][c] = next;
+            cell.classList.remove('binary-empty', 'binary-zero', 'binary-one');
+            if (next === null) cell.classList.add('binary-empty');
+            else if (next === 0) cell.classList.add('binary-zero');
+            else if (next === 1) cell.classList.add('binary-one');
+          });
         }
-        state.currentView = viewName;
+
+        binaryGridEl.appendChild(cell);
+      }
+    }
+  }
+
+  document.getElementById('binary-prev').addEventListener('click', () => {
+    if (state.binary.level > 0) {
+      state.binary.level--;
+      initBinary();
+    }
+  });
+
+  document.getElementById('binary-next').addEventListener('click', () => {
+    if (state.binary.level < BINARY_LEVELS.length - 1) {
+      state.binary.level++;
+      initBinary();
+    }
+  });
+
+  document.getElementById('binary-reset').addEventListener('click', initBinary);
+
+  document.getElementById('binary-verify').addEventListener('click', () => {
+    const size = BINARY_LEVELS[state.binary.level].size;
+    const grid = state.binary.userGrid;
+
+    // Check if full
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        if (grid[r][c] === null) {
+          binaryStatusEl.textContent = "La grille n'est pas complète.";
+          return;
+        }
+      }
     }
 
-    // =========================================================================
-    // SUDOKU GAME
-    // =========================================================================
-    const sudokuGridEl = document.getElementById('sudoku-grid');
+    // Rule 1: Equal number of 0s and 1s in each row and col
+    for (let r = 0; r < size; r++) {
+      let count0 = 0, count1 = 0;
+      for (let c = 0; c < size; c++) {
+        if (grid[r][c] === 0) count0++;
+        if (grid[r][c] === 1) count1++;
+      }
+      if (count0 !== size / 2 || count1 !== size / 2) {
+        binaryStatusEl.textContent = `Erreur : Déséquilibre de 0 et 1 à la ligne ${r + 1}.`;
+        return;
+      }
+    }
+
+    for (let c = 0; c < size; c++) {
+      let count0 = 0, count1 = 0;
+      for (let r = 0; r < size; r++) {
+        if (grid[r][c] === 0) count0++;
+        if (grid[r][c] === 1) count1++;
+      }
+      if (count0 !== size / 2 || count1 !== size / 2) {
+        binaryStatusEl.textContent = `Erreur : Déséquilibre de 0 et 1 à la colonne ${c + 1}.`;
+        return;
+      }
+    }
+
+    // Rule 2: No more than two adjacent identical numbers
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size - 2; c++) {
+        if (grid[r][c] !== null && grid[r][c] === grid[r][c+1] && grid[r][c] === grid[r][c+2]) {
+          binaryStatusEl.textContent = "Erreur : Plus de deux chiffres identiques alignés horizontalement.";
+          return;
+        }
+      }
+    }
+
+    for (let c = 0; c < size; c++) {
+      for (let r = 0; r < size - 2; r++) {
+        if (grid[r][c] !== null && grid[r][c] === grid[r+1][c] && grid[r][c] === grid[r+2][c]) {
+          binaryStatusEl.textContent = "Erreur : Plus de deux chiffres identiques alignés verticalement.";
+          return;
+        }
+      }
+    }
+
+    // Rule 3: Unique rows and columns
+    let rowsStr = [];
+    for (let r = 0; r < size; r++) {
+      let rStr = grid[r].join('');
+      if (rowsStr.includes(rStr)) {
+        binaryStatusEl.textContent = "Erreur : Deux lignes sont identiques.";
+        return;
+      }
+      rowsStr.push(rStr);
+    }
+
+    let colsStr = [];
+    for (let c = 0; c < size; c++) {
+      let cStr = '';
+      for (let r = 0; r < size; r++) {
+        cStr += grid[r][c];
+      }
+      if (colsStr.includes(cStr)) {
+        binaryStatusEl.textContent = "Erreur : Deux colonnes sont identiques.";
+        return;
+      }
+      colsStr.push(cStr);
+    }
+
+    binaryStatusEl.textContent = "Félicitations ! Grille résolue avec succès.";
+  });
+
+
+  // --- GAME 3: CRYPTOGRAM ---
+  const cryptoBoardEl = document.getElementById('crypto-board');
+  const cryptoKeyboardEl = document.getElementById('crypto-keyboard');
+  const cryptoStatusEl = document.getElementById('crypto-status');
+  const cryptoLevelIndicator = document.getElementById('crypto-level-indicator');
+
+  function generateSubstitutionCipher() {
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    let shuffled = [...alphabet];
+    // Simple Fisher-Yates shuffle
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
     
-    // Simple static puzzles for demonstration (Easy, Medium, Hard)
-    const sudokuPuzzles = {
-        easy: {
-            start: "530070000600195000098000060800060003400803001700020006060000280000419005000080079",
-            solution: "534678912672195348198342567859761423426853791713924856961537284287419635345286179"
-        },
-        medium: {
-            start: "000260701680070090190004500820100040004602900050003028009300074040050036703018000",
-            solution: "435269781682571394197834562826195437374682915951743628219356874847952136763418259"
-        },
-        hard: {
-            start: "000600400700003600000091080000000000050180003000306045040200060903000000020000100",
-            solution: "581627439792453618364891582217549368659182743831376945148235769973518246425968137"
-        }
-    };
-
-    function initSudoku() {
-        document.getElementById('sudoku-easy').addEventListener('click', () => loadSudoku('easy'));
-        document.getElementById('sudoku-medium').addEventListener('click', () => loadSudoku('medium'));
-        document.getElementById('sudoku-hard').addEventListener('click', () => loadSudoku('hard'));
-        document.getElementById('sudoku-check').addEventListener('click', checkSudoku);
-
-        document.querySelectorAll('.num-key').forEach(key => {
-            key.addEventListener('click', () => {
-                if (state.sudoku.selectedCell !== null) {
-                    const idx = state.sudoku.selectedCell;
-                    if (state.sudoku.initial[idx] === 0) {
-                        const val = key.id === 'sudoku-clear' ? 0 : parseInt(key.textContent);
-                        state.sudoku.grid[idx] = val;
-                        renderSudoku();
-                    }
-                }
-            });
-        });
-
-        loadSudoku('easy');
+    // Ensure no letter maps to itself to keep it fun
+    for (let i = 0; i < alphabet.length; i++) {
+      if (alphabet[i] === shuffled[i]) {
+        const swapIndex = (i + 1) % alphabet.length;
+        [shuffled[i], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[i]];
+      }
     }
 
-    function loadSudoku(difficulty) {
-        const p = sudokuPuzzles[difficulty];
-        state.sudoku.initial = p.start.split('').map(Number);
-        state.sudoku.grid = [...state.sudoku.initial];
-        state.sudoku.solution = p.solution.split('').map(Number);
-        state.sudoku.selectedCell = null;
-        renderSudoku();
-    }
+    let map = {};
+    alphabet.forEach((char, idx) => {
+      map[char] = shuffled[idx];
+    });
+    return map;
+  }
 
-    function renderSudoku() {
-        sudokuGridEl.innerHTML = '';
-        for (let i = 0; i < 81; i++) {
-            const cell = document.createElement('div');
-            cell.classList.add('sudoku-cell');
-            if (state.sudoku.initial[i] !== 0) {
-                cell.classList.add('fixed');
-                cell.textContent = state.sudoku.initial[i];
-            } else if (state.sudoku.grid[i] !== 0) {
-                cell.textContent = state.sudoku.grid[i];
-            }
+  function initCryptogram() {
+    const levelData = CRYPTO_LEVELS[state.cryptogram.level];
+    cryptoLevelIndicator.textContent = `Défi ${state.cryptogram.level + 1}`;
+    cryptoStatusEl.textContent = "";
+    cryptoBoardEl.innerHTML = "";
+    state.cryptogram.selectedCipherChar = null;
+    state.cryptogram.userDecryption = {};
 
-            if (state.sudoku.selectedCell === i) {
-                cell.classList.add('selected');
-            }
+    // Generate a stable cipher mapping for this level session
+    state.cryptogram.cipherMap = generateSubstitutionCipher();
 
-            cell.addEventListener('click', () => {
-                state.sudoku.selectedCell = i;
-                renderSudoku();
-            });
-            sudokuGridEl.appendChild(cell);
-        }
-    }
+    // Render Board
+    const words = levelData.quote.split(" ");
+    words.forEach(word => {
+      const wordDiv = document.createElement('div');
+      wordDiv.classList.add('crypto-word');
 
-    function checkSudoku() {
-        let correct = true;
-        for (let i = 0; i < 81; i++) {
-            if (state.sudoku.grid[i] !== state.sudoku.solution[i]) {
-                correct = false;
-                break;
-            }
-        }
-        alert(correct ? "Perfect! You solved it!" : "There are errors or incomplete cells.");
-    }
+      for (let char of word) {
+        const box = document.createElement('div');
+        box.classList.add('crypto-letter-box');
 
-    // =========================================================================
-    // WORDLE GAME (E-WORD)
-    // =========================================================================
-    const wordleGridEl = document.getElementById('wordle-grid');
-    const wordleKeyboardEl = document.getElementById('wordle-keyboard');
-    const wordleWords = ["PAPER", "WRITE", "BOOKS", "INDEX", "LIGHT", "SMART", "CLEAN", "SHARP", "BOARD", "STONE"];
+        if (/[A-Z]/.test(char)) {
+          const cipherChar = state.cryptogram.cipherMap[char];
+          
+          const inputChar = document.createElement('div');
+          inputChar.classList.add('crypto-input-char');
+          inputChar.textContent = "";
+          inputChar.dataset.cipher = cipherChar;
 
-    function initWordle() {
-        document.getElementById('wordle-reset').addEventListener('click', resetWordle);
-        resetWordle();
-    }
+          const cipherLabel = document.createElement('span');
+          cipherLabel.classList.add('crypto-cipher-char');
+          cipherLabel.textContent = cipherChar;
 
-    function resetWordle() {
-        state.wordle.secret = wordleWords[Math.floor(Math.random() * wordleWords.length)];
-        state.wordle.guesses = [];
-        state.wordle.currentGuess = '';
-        state.wordle.gameOver = false;
-        renderWordle();
-        renderWordleKeyboard();
-    }
+          box.appendChild(inputChar);
+          box.appendChild(cipherLabel);
+          box.dataset.cipher = cipherChar;
 
-    function renderWordle() {
-        wordleGridEl.innerHTML = '';
-        for (let r = 0; r < state.wordle.maxGuesses; r++) {
-            const row = document.createElement('div');
-            row.classList.add('wordle-row');
-            const guess = state.wordle.guesses[r] || '';
-            
-            for (let c = 0; c < 5; c++) {
-                const cell = document.createElement('div');
-                cell.classList.add('wordle-cell');
-                
-                if (r < state.wordle.guesses.length) {
-                    const char = guess[c];
-                    cell.textContent = char;
-                    if (state.wordle.secret[c] === char) {
-                        cell.classList.add('correct');
-                    } else if (state.wordle.secret.includes(char)) {
-                        cell.classList.add('present');
-                    } else {
-                        cell.classList.add('absent');
-                    }
-                } else if (r === state.wordle.guesses.length) {
-                    cell.textContent = state.wordle.currentGuess[c] || '';
-                }
-                row.appendChild(cell);
-            }
-            wordleGridEl.appendChild(row);
-        }
-    }
-
-    function renderWordleKeyboard() {
-        wordleKeyboardEl.innerHTML = '';
-        const layout = [
-            ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
-            ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
-            ["ENTER", "Z", "X", "C", "V", "B", "N", "M", "BACK"]
-        ];
-
-        layout.forEach(rowKeys => {
-            const row = document.createElement('div');
-            row.classList.add('keyboard-row');
-            rowKeys.forEach(key => {
-                const btn = document.createElement('button');
-                btn.textContent = key;
-                btn.classList.add('key');
-                if (key === 'ENTER' || key === 'BACK') btn.classList.add('wide');
-                
-                btn.addEventListener('click', () => handleWordleInput(key));
-                row.appendChild(btn);
-            });
-            wordleKeyboardEl.appendChild(row);
-        });
-    }
-
-    function handleWordleInput(key) {
-        if (state.wordle.gameOver) return;
-
-        if (key === 'BACK') {
-            state.wordle.currentGuess = state.wordle.currentGuess.slice(0, -1);
-        } else if (key === 'ENTER') {
-            if (state.wordle.currentGuess.length === 5) {
-                state.wordle.guesses.push(state.wordle.currentGuess);
-                if (state.wordle.currentGuess === state.wordle.secret) {
-                    state.wordle.gameOver = true;
-                    renderWordle();
-                    alert("Correct! You found the word!");
-                    return;
-                }
-                state.wordle.currentGuess = '';
-                if (state.wordle.guesses.length >= state.wordle.maxGuesses) {
-                    state.wordle.gameOver = true;
-                    alert(`Game Over! The word was: ${state.wordle.secret}`);
-                }
-            }
+          box.addEventListener('click', () => {
+            selectCipherLetter(cipherChar);
+          });
         } else {
-            if (state.wordle.currentGuess.length < 5) {
-                state.wordle.currentGuess += key;
-            }
+          // Punctuation
+          const punct = document.createElement('span');
+          punct.classList.add('crypto-punctuation');
+          punct.textContent = char;
+          box.appendChild(punct);
         }
-        renderWordle();
-    }
+        wordDiv.appendChild(box);
+      }
+      cryptoBoardEl.appendChild(wordDiv);
+    });
 
-    // =========================================================================
-    // MINESWEEPER GAME
-    // =========================================================================
-    const minesGridEl = document.getElementById('mines-grid');
-    const minesModeBtn = document.getElementById('mines-mode-btn');
-    const mineCountEl = document.getElementById('mine-count');
+    renderKeyboard();
+  }
 
-    function initMines() {
-        document.getElementById('mines-reset').addEventListener('click', resetMines);
-        minesModeBtn.addEventListener('click', () => {
-            state.mines.mode = state.mines.mode === 'reveal' ? 'flag' : 'reveal';
-            minesModeBtn.textContent = `Mode: ${state.mines.mode.toUpperCase()}`;
+  function selectCipherLetter(cipherChar) {
+    state.cryptogram.selectedCipherChar = cipherChar;
+    
+    // Highlight all instances of this cipher letter
+    document.querySelectorAll('.crypto-letter-box').forEach(box => {
+      if (box.dataset.cipher === cipherChar) {
+        box.classList.add('selected');
+      } else {
+        box.classList.remove('selected');
+      }
+    });
+
+    // Highlight key on virtual keyboard
+    document.querySelectorAll('.key-btn').forEach(btn => {
+      if (btn.textContent === state.cryptogram.userDecryption[cipherChar]) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
+
+  function renderKeyboard() {
+    cryptoKeyboardEl.innerHTML = "";
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    
+    alphabet.forEach(char => {
+      const btn = document.createElement('button');
+      btn.classList.add('key-btn');
+      btn.textContent = char;
+      btn.addEventListener('click', () => {
+        if (state.cryptogram.selectedCipherChar) {
+          const cipher = state.cryptogram.selectedCipherChar;
+          state.cryptogram.userDecryption[cipher] = char;
+          
+          // Update all matching inputs on board
+          document.querySelectorAll(`.crypto-input-char[data-cipher="${cipher}"]`).forEach(el => {
+            el.textContent = char;
+          });
+          
+          selectCipherLetter(cipher); // refresh highlight
+        }
+      });
+      cryptoKeyboardEl.appendChild(btn);
+    });
+
+    // Clear Key
+    const clearBtn = document.createElement('button');
+    clearBtn.classList.add('key-btn', 'clear-key');
+    clearBtn.textContent = "Effacer";
+    clearBtn.addEventListener('click', () => {
+      if (state.cryptogram.selectedCipherChar) {
+        const cipher = state.cryptogram.selectedCipherChar;
+        delete state.cryptogram.userDecryption[cipher];
+        document.querySelectorAll(`.crypto-input-char[data-cipher="${cipher}"]`).forEach(el => {
+          el.textContent = "";
         });
-        resetMines();
-    }
+        selectCipherLetter(cipher);
+      }
+    });
+    cryptoKeyboardEl.appendChild(clearBtn);
+  }
 
-    function resetMines() {
-        state.mines.gameOver = false;
-        state.mines.grid = Array(81).fill(0); // 0 = empty, 9 = mine
-        state.mines.revealed = Array(81).fill(false);
-        state.mines.flagged = Array(81).fill(false);
+  document.getElementById('crypto-prev').addEventListener('click', () => {
+    if (state.cryptogram.level > 0) {
+      state.cryptogram.level--;
+      initCryptogram();
+    }
+  });
+
+  document.getElementById('crypto-next').addEventListener('click', () => {
+    if (state.cryptogram.level < CRYPTO_LEVELS.length - 1) {
+      state.cryptogram.level++;
+      initCryptogram();
+    }
+  });
+
+  document.getElementById('crypto-reset').addEventListener('click', initCryptogram);
+
+  document.getElementById('crypto-verify').addEventListener('click', () => {
+    const levelData = CRYPTO_LEVELS[state.cryptogram.level];
+    let isCorrect = true;
+
+    // Check if every letter matches the original quote
+    document.querySelectorAll('.crypto-letter-box').forEach(box => {
+      const cipher = box.dataset.cipher;
+      if (cipher) {
+        const userChar = state.cryptogram.userDecryption[cipher];
+        // Find original char from cipherMap
+        const originalChar = Object.keys(state.cryptogram.cipherMap).find(key => state.cryptogram.cipherMap[key] === cipher);
         
-        // Place mines
-        let placed = 0;
-        while (placed < state.mines.mineCount) {
-            const idx = Math.floor(Math.random() * 81);
-            if (state.mines.grid[idx] !== 9) {
-                state.mines.grid[idx] = 9;
-                placed++;
-            }
+        if (!userChar || userChar !== originalChar) {
+          isCorrect = false;
         }
+      }
+    });
 
-        // Calculate neighbors
-        for (let i = 0; i < 81; i++) {
-            if (state.mines.grid[i] === 9) continue;
-            let count = 0;
-            const neighbors = getMineNeighbors(i);
-            neighbors.forEach(n => {
-                if (state.mines.grid[n] === 9) count++;
-            });
-            state.mines.grid[i] = count;
-        }
-
-        renderMines();
+    if (isCorrect) {
+      cryptoStatusEl.textContent = `Bravo ! Citation décryptée ! - ${levelData.author}`;
+    } else {
+      cryptoStatusEl.textContent = "Certaines lettres sont incorrectes ou manquantes.";
     }
+  });
 
-    function getMineNeighbors(idx) {
-        const neighbors = [];
-        const r = Math.floor(idx / 9);
-        const c = idx % 9;
-        for (let dr = -1; dr <= 1; dr++) {
-            for (let dc = -1; dc <= 1; dc++) {
-                if (dr === 0 && dc === 0) continue;
-                const nr = r + dr;
-                const nc = c + dc;
-                if (nr >= 0 && nr < 9 && nc >= 0 && nc < 9) {
-                    neighbors.push(nr * 9 + nc);
-                }
-            }
-        }
-        return neighbors;
-    }
-
-    function renderMines() {
-        minesGridEl.innerHTML = '';
-        mineCountEl.textContent = `Mines: ${state.mines.mineCount - state.mines.flagged.filter(Boolean).length}`;
-
-        for (let i = 0; i < 81; i++) {
-            const cell = document.createElement('div');
-            cell.classList.add('mines-cell');
-            
-            if (state.mines.revealed[i]) {
-                cell.classList.add('revealed');
-                if (state.mines.grid[i] === 9) {
-                    cell.classList.add('mine');
-                    cell.textContent = '✹';
-                } else if (state.mines.grid[i] > 0) {
-                    cell.textContent = state.mines.grid[i];
-                }
-            } else if (state.mines.flagged[i]) {
-                cell.textContent = '⚑';
-            }
-
-            cell.addEventListener('click', () => handleMineClick(i));
-            minesGridEl.appendChild(cell);
-        }
-    }
-
-    function handleMineClick(idx) {
-        if (state.mines.gameOver) return;
-
-        if (state.mines.mode === 'flag') {
-            if (!state.mines.revealed[idx]) {
-                state.mines.flagged[idx] = !state.mines.flagged[idx];
-            }
-        } else {
-            if (state.mines.flagged[idx]) return;
-            if (state.mines.grid[idx] === 9) {
-                // Hit mine
-                state.mines.gameOver = true;
-                state.mines.revealed = Array(81).fill(true);
-                alert("Game Over! You hit a mine.");
-            } else {
-                revealMineCell(idx);
-            }
-        }
-        renderMines();
-    }
-
-    function revealMineCell(idx) {
-        if (state.mines.revealed[idx]) return;
-        state.mines.revealed[idx] = true;
-        if (state.mines.grid[idx] === 0) {
-            const neighbors = getMineNeighbors(idx);
-            neighbors.forEach(n => revealMineCell(n));
-        }
-    }
-
-    // =========================================================================
-    // TIC-TAC-TOE GAME
-    // =========================================================================
-    const tttCells = document.querySelectorAll('.ttt-cell');
-    const tttStatus = document.getElementById('ttt-status');
-
-    function initTicTacToe() {
-        document.getElementById('ttt-reset').addEventListener('click', resetTicTacToe);
-        tttCells.forEach(cell => {
-            cell.addEventListener('click', () => {
-                const idx = parseInt(cell.getAttribute('data-index'));
-                if (state.tictactoe.board[idx] === '' && !state.tictactoe.gameOver && state.tictactoe.turn === 'X') {
-                    makeTTTMove(idx, 'X');
-                    if (!state.tictactoe.gameOver) {
-                        setTimeout(makeTTTAIMove, 300);
-                    }
-                }
-            });
+  // Support physical keyboard for Cryptogram
+  window.addEventListener('keydown', (e) => {
+    if (state.currentView === 'cryptogram' && state.cryptogram.selectedCipherChar) {
+      const key = e.key.toUpperCase();
+      if (/[A-Z]/.test(key) && key.length === 1) {
+        const cipher = state.cryptogram.selectedCipherChar;
+        state.cryptogram.userDecryption[cipher] = key;
+        document.querySelectorAll(`.crypto-input-char[data-cipher="${cipher}"]`).forEach(el => {
+          el.textContent = key;
         });
-        resetTicTacToe();
-    }
-
-    function resetTicTacToe() {
-        state.tictactoe.board = Array(9).fill('');
-        state.tictactoe.gameOver = false;
-        state.tictactoe.turn = 'X';
-        tttStatus.textContent = "Your turn (X)";
-        renderTicTacToe();
-    }
-
-    function renderTicTacToe() {
-        tttCells.forEach((cell, idx) => {
-            cell.textContent = state.tictactoe.board[idx];
+        selectCipherLetter(cipher);
+      } else if (e.key === 'Backspace' || e.key === 'Delete') {
+        const cipher = state.cryptogram.selectedCipherChar;
+        delete state.cryptogram.userDecryption[cipher];
+        document.querySelectorAll(`.crypto-input-char[data-cipher="${cipher}"]`).forEach(el => {
+          el.textContent = "";
         });
+        selectCipherLetter(cipher);
+      }
     }
+  });
 
-    function makeTTTMove(idx, player) {
-        state.tictactoe.board[idx] = player;
-        renderTicTacToe();
-        if (checkTTTWin(player)) {
-            state.tictactoe.gameOver = true;
-            tttStatus.textContent = `${player} Wins!`;
-            alert(`${player} Wins!`);
-        } else if (state.tictactoe.board.every(cell => cell !== '')) {
-            state.tictactoe.gameOver = true;
-            tttStatus.textContent = "It's a Draw!";
-            alert("It's a Draw!");
-        } else {
-            state.tictactoe.turn = player === 'X' ? 'O' : 'X';
-            tttStatus.textContent = state.tictactoe.turn === 'X' ? "Your turn (X)" : "AI thinking...";
-        }
-    }
-
-    function makeTTTAIMove() {
-        if (state.tictactoe.gameOver) return;
-        // Simple AI: Win if possible, block if possible, otherwise random
-        const emptyIndices = state.tictactoe.board.map((val, idx) => val === '' ? idx : null).filter(val => val !== null);
-        if (emptyIndices.length === 0) return;
-
-        // 1. Can AI win?
-        for (let idx of emptyIndices) {
-            state.tictactoe.board[idx] = 'O';
-            if (checkTTTWin('O')) {
-                state.tictactoe.board[idx] = '';
-                makeTTTMove(idx, 'O');
-                return;
-            }
-            state.tictactoe.board[idx] = '';
-        }
-
-        // 2. Can AI block?
-        for (let idx of emptyIndices) {
-            state.tictactoe.board[idx] = 'X';
-            if (checkTTTWin('X')) {
-                state.tictactoe.board[idx] = '';
-                makeTTTMove(idx, 'O');
-                return;
-            }
-            state.tictactoe.board[idx] = '';
-        }
-
-        // 3. Random move
-        const randomIdx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
-        makeTTTMove(randomIdx, 'O');
-    }
-
-    function checkTTTWin(player) {
-        const wins = [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8],
-            [0, 3, 6], [1, 4, 7], [2, 5, 8],
-            [0, 4, 8], [2, 4, 6]
-        ];
-        return wins.some(combo => combo.every(idx => state.tictactoe.board[idx] === player));
-    }
-
-    // =========================================================================
-    // CHESS GAME (NEW)
-    // =========================================================================
-    const chessBoardEl = document.getElementById('chess-board');
-    const chessTurnEl = document.getElementById('chess-turn');
-
-    const initialChessBoard = [
-        ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'],
-        ['♟', '♟', '♟', '♟', '♟', '♟', '♟', '♟'],
-        ['', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', ''],
-        ['♙', '♙', '♙', '♙', '♙', '♙', '♙', '♙'],
-        ['♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖']
-    ];
-
-    function initChess() {
-        document.getElementById('chess-reset').addEventListener('click', resetChess);
-        resetChess();
-    }
-
-    function resetChess() {
-        state.chess.board = JSON.parse(JSON.stringify(initialChessBoard));
-        state.chess.selectedSquare = null;
-        state.chess.turn = 'white';
-        state.chess.validMoves = [];
-        chessTurnEl.textContent = "Turn: White";
-        renderChess();
-    }
-
-    function renderChess() {
-        chessBoardEl.innerHTML = '';
-        for (let r = 0; r < 8; r++) {
-            for (let c = 0; c < 8; c++) {
-                const sq = document.createElement('div');
-                sq.classList.add('chess-square');
-                sq.classList.add((r + c) % 2 === 0 ? 'light' : 'dark');
-                sq.textContent = state.chess.board[r][c];
-                sq.dataset.row = r;
-                sq.dataset.col = c;
-
-                if (state.chess.selectedSquare && state.chess.selectedSquare.r === r && state.chess.selectedSquare.c === c) {
-                    sq.classList.add('selected');
-                }
-
-                sq.addEventListener('click', () => handleChessClick(r, c));
-                chessBoardEl.appendChild(sq);
-            }
-        }
-    }
-
-    function handleChessClick(r, c) {
-        const piece = state.chess.board[r][c];
-        const isWhitePiece = '♙♖♘♗♕♔'.includes(piece);
-        const isBlackPiece = '♟♜♞♝♛♚'.includes(piece);
-
-        if (state.chess.selectedSquare) {
-            const sr = state.chess.selectedSquare.r;
-            const sc = state.chess.selectedSquare.c;
-
-            // Move piece
-            if (sr !== r || sc !== c) {
-                state.chess.board[r][c] = state.chess.board[sr][sc];
-                state.chess.board[sr][sc] = '';
-                state.chess.turn = state.chess.turn === 'white' ? 'black' : 'white';
-                chessTurnEl.textContent = `Turn: ${state.chess.turn.charAt(0).toUpperCase() + state.chess.turn.slice(1)}`;
-            }
-            state.chess.selectedSquare = null;
-        } else {
-            // Select piece
-            if (piece !== '') {
-                if ((state.chess.turn === 'white' && isWhitePiece) || (state.chess.turn === 'black' && isBlackPiece)) {
-                    state.chess.selectedSquare = { r, c };
-                }
-            }
-        }
-        renderChess();
-    }
-
-    // =========================================================================
-    // 2048 GAME (NEW)
-    // =========================================================================
-    const grid2048El = document.getElementById('grid-2048');
-    const score2048El = document.getElementById('score-2048');
-
-    function init2048() {
-        document.getElementById('reset-2048').addEventListener('click', reset2048);
-        document.getElementById('btn-2048-up').addEventListener('click', () => move2048('up'));
-        document.getElementById('btn-2048-down').addEventListener('click', () => move2048('down'));
-        document.getElementById('btn-2048-left').addEventListener('click', () => move2048('left'));
-        document.getElementById('btn-2048-right').addEventListener('click', () => move2048('right'));
-        
-        // Keyboard support
-        window.addEventListener('keydown', (e) => {
-            if (state.currentView !== 'game2048') return;
-            if (e.key === 'ArrowUp') move2048('up');
-            if (e.key === 'ArrowDown') move2048('down');
-            if (e.key === 'ArrowLeft') move2048('left');
-            if (e.key === 'ArrowRight') move2048('right');
-        });
-
-        reset2048();
-    }
-
-    function reset2048() {
-        state.game2048.board = Array(16).fill(0);
-        state.game2048.score = 0;
-        state.game2048.gameOver = false;
-        add2048Tile();
-        add2048Tile();
-        render2048();
-    }
-
-    function add2048Tile() {
-        const emptyIndices = state.game2048.board.map((val, idx) => val === 0 ? idx : null).filter(val => val !== null);
-        if (emptyIndices.length > 0) {
-            const randomIdx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
-            state.game2048.board[randomIdx] = Math.random() < 0.9 ? 2 : 4;
-        }
-    }
-
-    function render2048() {
-        grid2048El.innerHTML = '';
-        score2048El.textContent = `Score: ${state.game2048.score}`;
-        for (let i = 0; i < 16; i++) {
-            const cell = document.createElement('div');
-            cell.classList.add('cell-2048');
-            const val = state.game2048.board[i];
-            if (val > 0) {
-                cell.textContent = val;
-                cell.setAttribute('data-value', val);
-            }
-            grid2048El.appendChild(cell);
-        }
-    }
-
-    function move2048(direction) {
-        if (state.game2048.gameOver) return;
-        let board = state.game2048.board;
-        let moved = false;
-
-        const rotate = (b) => {
-            let next = Array(16).fill(0);
-            for (let r = 0; r < 4; r++) {
-                for (let c = 0; c < 4; c++) {
-                    next[c * 4 + (3 - r)] = b[r * 4 + c];
-                }
-            }
-            return next;
-        };
-
-        // Rotate board so we always slide left
-        let rotations = 0;
-        if (direction === 'up') rotations = 1;
-        if (direction === 'right') rotations = 2;
-        if (direction === 'down') rotations = 3;
-
-        for (let i = 0; i < rotations; i++) board = rotate(board);
-
-        // Slide left & merge
-        for (let r = 0; r < 4; r++) {
-            let row = [board[r*4], board[r*4+1], board[r*4+2], board[r*4+3]].filter(v => v !== 0);
-            let nextRow = [];
-            for (let i = 0; i < row.length; i++) {
-                if (row[i] === row[i+1]) {
-                    nextRow.push(row[i] * 2);
-                    state.game2048.score += row[i] * 2;
-                    i++;
-                    moved = true;
-                } else {
-                    nextRow.push(row[i]);
-                }
-            }
-            while (nextRow.length < 4) nextRow.push(0);
-            
-            for (let c = 0; c < 4; c++) {
-                if (board[r*4+c] !== nextRow[c]) moved = true;
-                board[r*4+c] = nextRow[c];
-            }
-        }
-
-        // Rotate back
-        const backRotations = (4 - rotations) % 4;
-        for (let i = 0; i < backRotations; i++) board = rotate(board);
-
-        state.game2048.board = board;
-
-        if (moved) {
-            add2048Tile();
-            render2048();
-            // Check game over
-            if (!state.game2048.board.includes(0)) {
-                // Simple check if any moves left
-                state.game2048.gameOver = true;
-                alert("Game Over!");
-            }
-        }
-    }
-
-    // =========================================================================
-    // HANGMAN GAME (NEW)
-    // =========================================================================
-    const hangmanGallowsEl = document.getElementById('hangman-gallows');
-    const hangmanWordDisplayEl = document.getElementById('hangman-word-display');
-    const hangmanKeyboardEl = document.getElementById('hangman-keyboard');
-    const hangmanLivesEl = document.getElementById('hangman-lives');
-
-    const hangmanWords = ["EINK", "PAPER", "SCREEN", "CONTRAST", "MINIMAL", "READER", "BATTERY", "DISPLAY"];
-    const gallowsStages = [
-`  +---+
-  |   |
-      |
-      |
-      |
-      |
-=========`,
-`  +---+
-  |   |
-  O   |
-      |
-      |
-      |
-=========`,
-`  +---+
-  |   |
-  O   |
-  |   |
-      |
-      |
-=========`,
-`  +---+
-  |   |
-  O   |
- /|   |
-      |
-      |
-=========`,
-`  +---+
-  |   |
-  O   |
- /|\\  |
-      |
-      |
-=========`,
-`  +---+
-  |   |
-  O   |
- /|\\  |
- /    |
-      |
-=========`,
-`  +---+
-  |   |
-  O   |
- /|\\  |
- / \\  |
-      |
-=========`
-    ];
-
-    function initHangman() {
-        document.getElementById('hangman-reset').addEventListener('click', resetHangman);
-        resetHangman();
-    }
-
-    function resetHangman() {
-        state.hangman.word = hangmanWords[Math.floor(Math.random() * hangmanWords.length)];
-        state.hangman.guessedLetters = new Set();
-        state.hangman.lives = 6;
-        state.hangman.gameOver = false;
-        renderHangman();
-        renderHangmanKeyboard();
-    }
-
-    function renderHangman() {
-        hangmanLivesEl.textContent = `Lives: ${state.hangman.lives}`;
-        hangmanGallowsEl.textContent = gallowsStages[6 - state.hangman.lives];
-
-        // Word display
-        const display = state.hangman.word.split('').map(char => 
-            state.hangman.guessedLetters.has(char) ? char : '_'
-        ).join(' ');
-        hangmanWordDisplayEl.textContent = display;
-
-        if (!display.includes('_')) {
-            state.hangman.gameOver = true;
-            alert("You Win!");
-        } else if (state.hangman.lives <= 0) {
-            state.hangman.gameOver = true;
-            alert(`Game Over! The word was: ${state.hangman.word}`);
-        }
-    }
-
-    function renderHangmanKeyboard() {
-        hangmanKeyboardEl.innerHTML = '';
-        const row1 = "QWERTYUIOP".split('');
-        const row2 = "ASDFGHJKL".split('');
-        const row3 = "ZXCVBNM".split('');
-
-        [row1, row2, row3].forEach(rowKeys => {
-            const row = document.createElement('div');
-            row.classList.add('keyboard-row');
-            rowKeys.forEach(key => {
-                const btn = document.createElement('button');
-                btn.textContent = key;
-                btn.classList.add('key');
-                if (state.hangman.guessedLetters.has(key)) {
-                    btn.disabled = true;
-                    btn.style.opacity = '0.3';
-                }
-                btn.addEventListener('click', () => {
-                    if (state.hangman.gameOver) return;
-                    state.hangman.guessedLetters.add(key);
-                    if (!state.hangman.word.includes(key)) {
-                        state.hangman.lives--;
-                    }
-                    renderHangman();
-                    renderHangmanKeyboard();
-                });
-                row.appendChild(btn);
-            });
-            hangmanKeyboardEl.appendChild(row);
-        });
-    }
-
-    // =========================================================================
-    // E-NOTES APP (NEW)
-    // =========================================================================
-    const notesTextarea = document.getElementById('notes-textarea');
-
-    function initNotes() {
-        // Load saved notes
-        const savedNotes = localStorage.getItem('eink_hub_notes');
-        if (savedNotes) {
-            notesTextarea.value = savedNotes;
-        }
-
-        // Auto-save on input
-        notesTextarea.addEventListener('input', () => {
-            localStorage.setItem('eink_hub_notes', notesTextarea.value);
-        });
-
-        document.getElementById('notes-clear').addEventListener('click', () => {
-            if (confirm("Are you sure you want to clear your notes?")) {
-                notesTextarea.value = '';
-                localStorage.removeItem('eink_hub_notes');
-            }
-        });
-    }
-
-    // Start everything
-    initHub();
 });

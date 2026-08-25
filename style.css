@@ -1,500 +1,394 @@
-/* E-Ink Aesthetic: High contrast, monochrome, sharp borders, no smooth animations */
+/* DESIGN SYSTEM OPTIMISÉ POUR E-INK (ENCRE ÉLECTRONIQUE) */
+/* Pas de dégradés, pas d'ombres floues, pas d'animations fluides (évite le ghosting) */
+
 :root {
-    --bg-color: #ffffff;
-    --fg-color: #000000;
-    --gray-light: #f0f0f0;
-    --gray-medium: #cccccc;
-    --gray-dark: #777777;
-    --border-width: 2px;
+  --bg-color: #ffffff;
+  --text-color: #000000;
+  --border-color: #000000;
+  --selected-bg: #e0e0e0;
+  --active-bg: #000000;
+  --active-text: #ffffff;
+  --grid-line: #000000;
+  --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+[data-theme="dark"] {
+  --bg-color: #000000;
+  --text-color: #ffffff;
+  --border-color: #ffffff;
+  --selected-bg: #333333;
+  --active-bg: #ffffff;
+  --active-text: #000000;
+  --grid-line: #ffffff;
 }
 
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: "Georgia", "Times New Roman", serif;
-    -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  /* Désactivation des transitions pour éviter le ghosting sur écran E-ink */
+  transition: none !important;
 }
 
 body {
-    background-color: var(--bg-color);
-    color: var(--fg-color);
-    display: flex;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 10px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: var(--font-family);
+  line-height: 1.4;
+  padding: 10px;
+  max-width: 480px; /* Format smartphone */
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-.container {
-    width: 100%;
-    max-width: 600px;
-    display: flex;
-    flex-direction: column;
-    border: var(--border-width) solid var(--fg-color);
-    padding: 15px;
-    background-color: var(--bg-color);
+/* Header & Navigation */
+.app-header {
+  border-bottom: 3px solid var(--border-color);
+  padding-bottom: 10px;
+  margin-bottom: 15px;
 }
 
-/* Header */
-.eink-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: var(--border-width) solid var(--fg-color);
-    padding-bottom: 10px;
-    margin-bottom: 15px;
+.header-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
-.header-left {
-    display: flex;
-    flex-direction: column;
+h1 {
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: 1px;
 }
 
-.header-left h1 {
-    font-size: 1.8rem;
-    font-weight: bold;
-    letter-spacing: 1px;
-    cursor: pointer;
+.nav-bar {
+  display: flex;
+  gap: 10px;
 }
 
-#current-time {
-    font-family: monospace;
-    font-size: 0.9rem;
-    margin-top: 2px;
+.btn-nav {
+  flex: 1;
+  background: none;
+  border: 2px solid var(--border-color);
+  color: var(--text-color);
+  padding: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 0.9rem;
 }
 
-button {
-    background-color: var(--bg-color);
-    color: var(--fg-color);
-    border: var(--border-width) solid var(--fg-color);
-    padding: 6px 12px;
-    font-size: 0.9rem;
-    font-weight: bold;
-    cursor: pointer;
-    outline: none;
-    font-family: sans-serif;
+.btn-nav.active {
+  background-color: var(--active-bg);
+  color: var(--active-text);
 }
 
-button:active, button.active {
-    background-color: var(--fg-color);
-    color: var(--bg-color);
+/* Buttons & Inputs */
+.btn-border {
+  background: var(--bg-color);
+  border: 2px solid var(--border-color);
+  color: var(--text-color);
+  padding: 8px 12px;
+  font-weight: bold;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
 }
 
-.hidden {
-    display: none !important;
+.btn-border:active {
+  background-color: var(--active-bg);
+  color: var(--active-text);
 }
 
-/* Dashboard */
-.welcome-section {
-    border: var(--border-width) solid var(--fg-color);
-    padding: 12px;
-    margin-bottom: 20px;
-    text-align: center;
+.btn-primary {
+  border-width: 3px;
+  background-color: var(--active-bg);
+  color: var(--active-text);
 }
 
-.date-today {
-    font-weight: bold;
-    margin-bottom: 5px;
+/* Views Management */
+.view {
+  display: none;
+  flex-direction: column;
+  flex-grow: 1;
 }
 
-.quote-box {
-    font-style: italic;
-    font-size: 0.95rem;
+.view.active {
+  display: flex;
 }
 
-.app-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+/* Home View */
+.intro-text {
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+  text-align: justify;
+  border-bottom: 1px dashed var(--border-color);
+  padding-bottom: 15px;
 }
 
-.app-card {
-    border: var(--border-width) solid var(--fg-color);
-    padding: 15px;
-    cursor: pointer;
-    background-color: var(--bg-color);
+.game-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
-.app-card:active {
-    background-color: var(--fg-color);
-    color: var(--bg-color);
+.game-card {
+  border: 2px solid var(--border-color);
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.app-card h3 {
-    font-size: 1.2rem;
-    margin-bottom: 5px;
-    text-decoration: underline;
+.game-card h2 {
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 4px;
+  display: inline-block;
+  width: fit-content;
 }
 
-.app-card p {
-    font-size: 0.85rem;
-    font-family: sans-serif;
-    color: var(--gray-dark);
+.game-card p {
+  font-size: 0.85rem;
 }
 
-/* Views */
-.view h2 {
-    font-size: 1.5rem;
-    margin-bottom: 15px;
-    border-bottom: 1px solid var(--fg-color);
-    padding-bottom: 5px;
+.game-card .btn-action {
+  align-self: flex-end;
+  background: var(--active-bg);
+  color: var(--active-text);
+  border: none;
+  padding: 6px 16px;
+  font-weight: bold;
+  cursor: pointer;
 }
 
+/* Game Headers & Layouts */
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+}
+
+.game-header h2 {
+  font-size: 1.1rem;
+}
+
+.level-selector {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.level-selector span {
+  font-size: 0.85rem;
+  font-weight: bold;
+  min-width: 65px;
+  text-align: center;
+}
+
+.game-instruction {
+  font-size: 0.8rem;
+  margin-bottom: 15px;
+  font-style: italic;
+  text-align: center;
+}
+
+/* Grids (Hitori & Binary) */
+.grid-container {
+  display: grid;
+  gap: 4px;
+  margin: 0 auto 15px auto;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1;
+  border: 3px solid var(--border-color);
+  padding: 4px;
+  background-color: var(--border-color);
+}
+
+.grid-cell {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: bold;
+  user-select: none;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+}
+
+/* Hitori Cell States */
+.grid-cell.hitori-shaded {
+  background-color: var(--text-color);
+  color: var(--bg-color);
+}
+
+.grid-cell.hitori-circled {
+  border: 4px double var(--border-color);
+  border-radius: 50%;
+}
+
+/* Binary Cell States */
+.grid-cell.binary-empty {
+  background-color: var(--bg-color);
+}
+.grid-cell.binary-zero::before {
+  content: "0";
+}
+.grid-cell.binary-one::before {
+  content: "1";
+}
+.grid-cell.binary-fixed {
+  text-decoration: underline;
+  background-color: var(--selected-bg);
+}
+
+/* Cryptogram Layout */
+.crypto-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 6px;
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 2px solid var(--border-color);
+  min-height: 150px;
+  background-color: var(--bg-color);
+}
+
+.crypto-word {
+  display: flex;
+  gap: 2px;
+  margin-right: 10px;
+}
+
+.crypto-letter-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 22px;
+}
+
+.crypto-input-char {
+  width: 22px;
+  height: 24px;
+  border: 1px solid var(--border-color);
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.crypto-letter-box.selected .crypto-input-char {
+  background-color: var(--text-color);
+  color: var(--bg-color);
+}
+
+.crypto-cipher-char {
+  font-size: 0.8rem;
+  font-weight: normal;
+  margin-top: 2px;
+}
+
+.crypto-punctuation {
+  font-size: 1.2rem;
+  font-weight: bold;
+  align-self: flex-end;
+  width: 12px;
+  text-align: center;
+}
+
+/* Virtual Keyboard for Cryptogram */
+.keyboard-container {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+  margin-bottom: 15px;
+}
+
+.key-btn {
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: 8px 0;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  text-align: center;
+}
+
+.key-btn:active, .key-btn.active {
+  background-color: var(--active-bg);
+  color: var(--active-text);
+}
+
+.key-btn.clear-key {
+  grid-column: span 2;
+}
+
+/* Controls & Status */
 .game-controls {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 15px;
-    align-items: center;
-    flex-wrap: wrap;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
 }
 
-.game-info {
-    font-size: 0.9rem;
-    margin-bottom: 10px;
-    font-style: italic;
+.game-controls button {
+  flex: 1;
 }
 
-/* Sudoku */
-.sudoku-grid {
-    display: grid;
-    grid-template-columns: repeat(9, 1fr);
-    border: 3px solid var(--fg-color);
-    margin-bottom: 15px;
-    aspect-ratio: 1;
+.game-status {
+  font-weight: bold;
+  text-align: center;
+  padding: 10px;
+  border: 2px dashed var(--border-color);
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
 }
 
-.sudoku-cell {
-    border: 1px solid var(--gray-medium);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    font-weight: bold;
-    font-family: sans-serif;
-    cursor: pointer;
-    user-select: none;
-    background-color: var(--bg-color);
+/* Rules View */
+.rules-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  text-align: left;
 }
 
-.sudoku-cell.selected {
-    background-color: var(--gray-medium);
+.rules-content h3 {
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 2px;
+  margin-top: 10px;
 }
 
-.sudoku-cell.fixed {
-    background-color: var(--gray-light);
+.rules-content ul {
+  padding-left: 20px;
+  font-size: 0.9rem;
 }
 
-/* Sudoku thick borders */
-.sudoku-cell:nth-child(3n) {
-    border-right: 2px solid var(--fg-color);
-}
-.sudoku-cell:nth-child(9n) {
-    border-right: none;
-}
-.sudoku-grid > div:nth-child(n+19):nth-child(-n+27),
-.sudoku-grid > div:nth-child(n+46):nth-child(-n+54) {
-    border-bottom: 2px solid var(--fg-color);
+.rules-content li {
+  margin-bottom: 6px;
 }
 
-.sudoku-keypad {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 5px;
-}
-
-/* Wordle */
-.wordle-grid {
-    display: grid;
-    grid-template-rows: repeat(6, 1fr);
-    gap: 5px;
-    margin-bottom: 15px;
-    max-width: 300px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.wordle-row {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 5px;
-}
-
-.wordle-cell {
-    border: var(--border-width) solid var(--fg-color);
-    aspect-ratio: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-    font-weight: bold;
-    text-transform: uppercase;
-    font-family: sans-serif;
-}
-
-/* Wordle states simulated in high contrast */
-.wordle-cell.correct {
-    background-color: var(--fg-color);
-    color: var(--bg-color);
-}
-
-.wordle-cell.present {
-    background-color: var(--gray-medium);
-    border-style: dashed;
-}
-
-.wordle-cell.absent {
-    background-color: var(--gray-light);
-    color: var(--gray-dark);
-}
-
-.keyboard {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    margin-bottom: 15px;
-}
-
-.keyboard-row {
-    display: flex;
-    justify-content: center;
-    gap: 3px;
-}
-
-.key {
-    background-color: var(--bg-color);
-    border: 1px solid var(--fg-color);
-    padding: 8px 5px;
-    font-size: 0.85rem;
-    font-weight: bold;
-    cursor: pointer;
-    flex: 1;
-    text-align: center;
-    font-family: sans-serif;
-}
-
-.key.wide {
-    flex: 1.5;
-}
-
-/* Minesweeper */
-.mines-grid {
-    display: grid;
-    grid-template-columns: repeat(9, 1fr);
-    border: var(--border-width) solid var(--fg-color);
-    aspect-ratio: 1;
-    margin-bottom: 15px;
-}
-
-.mines-cell {
-    border: 1px solid var(--fg-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-family: monospace;
-    font-size: 1.1rem;
-    cursor: pointer;
-    background-color: var(--gray-medium);
-    user-select: none;
-}
-
-.mines-cell.revealed {
-    background-color: var(--bg-color);
-}
-
-.mines-cell.mine {
-    background-color: var(--fg-color);
-    color: var(--bg-color);
-}
-
-/* Tic-Tac-Toe */
-.ttt-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    border: var(--border-width) solid var(--fg-color);
-    aspect-ratio: 1;
-    max-width: 300px;
-    margin: 0 auto 15px auto;
-}
-
-.ttt-cell {
-    border: 1px solid var(--fg-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.5rem;
-    font-weight: bold;
-    cursor: pointer;
-    background-color: var(--bg-color);
-    height: 100px;
-}
-
-/* Chess View */
-.chess-board {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    border: var(--border-width) solid var(--fg-color);
-    aspect-ratio: 1;
-    margin-bottom: 15px;
-}
-
-.chess-square {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8rem;
-    cursor: pointer;
-    user-select: none;
-}
-
-.chess-square.light {
-    background-color: var(--bg-color);
-}
-
-.chess-square.dark {
-    background-color: var(--gray-medium);
-}
-
-.chess-square.selected {
-    outline: 3px solid var(--fg-color);
-    outline-offset: -3px;
-}
-
-.chess-square.highlight {
-    background-color: var(--gray-dark) !important;
-    color: var(--bg-color);
-}
-
-/* 2048 View */
-.grid-2048 {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-    border: var(--border-width) solid var(--fg-color);
-    padding: 6px;
-    aspect-ratio: 1;
-    background-color: var(--fg-color);
-    margin-bottom: 15px;
-}
-
-.cell-2048 {
-    background-color: var(--bg-color);
-    border: 1px solid var(--fg-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-    font-weight: bold;
-    font-family: sans-serif;
-}
-
-.cell-2048[data-value="2"] { background-color: #ffffff; }
-.cell-2048[data-value="4"] { background-color: #f0f0f0; }
-.cell-2048[data-value="8"] { background-color: #e0e0e0; }
-.cell-2048[data-value="16"] { background-color: #d0d0d0; }
-.cell-2048[data-value="32"] { background-color: #c0c0c0; }
-.cell-2048[data-value="64"] { background-color: #b0b0b0; }
-.cell-2048[data-value="128"] { background-color: #a0a0a0; }
-.cell-2048[data-value="256"] { background-color: #909090; color: white; }
-.cell-2048[data-value="512"] { background-color: #707070; color: white; }
-.cell-2048[data-value="1024"] { background-color: #404040; color: white; }
-.cell-2048[data-value="2048"] { background-color: #000000; color: white; }
-
-.controls-2048 {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-    margin-top: 10px;
-}
-
-.horizontal-controls {
-    display: flex;
-    gap: 10px;
-}
-
-.controls-2048 button {
-    width: 50px;
-    height: 40px;
-    font-size: 1.2rem;
-    padding: 0;
-}
-
-/* Hangman View */
-.hangman-display {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    border: var(--border-width) solid var(--fg-color);
-    padding: 15px;
-    margin-bottom: 15px;
-}
-
-#hangman-gallows {
-    font-family: monospace;
-    font-size: 1rem;
-    line-height: 1.2;
-    white-space: pre;
-    margin-bottom: 15px;
-}
-
-#hangman-word-display {
-    font-size: 1.6rem;
-    letter-spacing: 5px;
-    font-weight: bold;
-    font-family: monospace;
-}
-
-/* Notes View */
-#notes-textarea {
-    width: 100%;
-    height: 250px;
-    border: var(--border-width) solid var(--fg-color);
-    padding: 10px;
-    font-size: 1.1rem;
-    line-height: 1.5;
-    resize: none;
-    outline: none;
-    background-color: var(--bg-color);
-    color: var(--fg-color);
-    margin-bottom: 15px;
-}
-
-/* Screen Flash Effect (Simulating E-Ink Refresh) */
-#flash-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: var(--fg-color);
-    opacity: 0;
-    pointer-events: none;
-    z-index: 9999;
-}
-
-.flash-active #flash-overlay {
-    animation: eink-flash 0.4s steps(2, cubic-bezier(0, 1, 1, 0));
-}
-
-@keyframes eink-flash {
-    0% { opacity: 0; }
-    50% { opacity: 1; }
-    100% { opacity: 0; }
-}
-
-/* Responsive adjustments */
-@media (max-width: 480px) {
-    .app-grid {
-        grid-template-columns: 1fr;
-    }
-    .sudoku-cell {
-        font-size: 1rem;
-    }
-    .wordle-cell {
-        font-size: 1.1rem;
-    }
-    .chess-square {
-        font-size: 1.4rem;
-    }
+/* Footer */
+.app-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--border-color);
+  padding-top: 10px;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: bold;
 }

@@ -1,194 +1,151 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>E-Ink Hub</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#ffffff">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>E-Ink Game Hub</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
-    <div id="flash-overlay"></div>
-    
-    <div class="container">
-        <!-- Header -->
-        <header class="eink-header">
-            <div class="header-left">
-                <h1 id="hub-title" class="clickable">E-INK HUB</h1>
-                <span id="current-time">00:00</span>
-            </div>
-            <div class="header-right">
-                <button id="btn-refresh" title="Clear Ghosting">Refresh Screen</button>
-                <button id="btn-home" class="hidden">Home</button>
-            </div>
-        </header>
-
-        <!-- Dashboard / Main Menu -->
-        <main id="view-dashboard" class="view">
-            <div class="welcome-section">
-                <p class="date-today" id="current-date">Loading date...</p>
-                <p class="quote-box" id="daily-quote">"Simplicity is the ultimate sophistication."</p>
-            </div>
-            
-            <div class="app-grid">
-                <div class="app-card" data-target="sudoku">
-                    <h3>Sudoku</h3>
-                    <p>Classic 9x9 grid puzzle</p>
-                </div>
-                <div class="app-card" data-target="wordle">
-                    <h3>E-Word</h3>
-                    <p>6 attempts to guess a 5-letter word</p>
-                </div>
-                <div class="app-card" data-target="mines">
-                    <h3>Minesweeper</h3>
-                    <p>Clear the grid without hitting mines</p>
-                </div>
-                <div class="app-card" data-target="tictactoe">
-                    <h3>Tic-Tac-Toe</h3>
-                    <p>Play against a smart AI</p>
-                </div>
-                <!-- New Games -->
-                <div class="app-card" data-target="chess">
-                    <h3>E-Chess</h3>
-                    <p>Local 2-player chess board</p>
-                </div>
-                <div class="app-card" data-target="game2048">
-                    <h3>E-2048</h3>
-                    <p>Slide tiles to reach 2048</p>
-                </div>
-                <div class="app-card" data-target="hangman">
-                    <h3>Hangman</h3>
-                    <p>Guess the hidden word</p>
-                </div>
-                <div class="app-card" data-target="notes">
-                    <h3>E-Notes</h3>
-                    <p>Simple distraction-free notepad</p>
-                </div>
-            </div>
-        </main>
-
-        <!-- Sudoku View -->
-        <section id="view-sudoku" class="view hidden">
-            <h2>Sudoku</h2>
-            <div class="game-controls">
-                <button id="sudoku-easy">Easy</button>
-                <button id="sudoku-medium">Medium</button>
-                <button id="sudoku-hard">Hard</button>
-                <button id="sudoku-check">Check</button>
-            </div>
-            <div id="sudoku-grid" class="sudoku-grid"></div>
-            <div class="sudoku-keypad">
-                <button class="num-key">1</button>
-                <button class="num-key">2</button>
-                <button class="num-key">3</button>
-                <button class="num-key">4</button>
-                <button class="num-key">5</button>
-                <button class="num-key">6</button>
-                <button class="num-key">7</button>
-                <button class="num-key">8</button>
-                <button class="num-key">9</button>
-                <button class="num-key" id="sudoku-clear">Clear</button>
-            </div>
-        </section>
-
-        <!-- Wordle View -->
-        <section id="view-wordle" class="view hidden">
-            <h2>E-Word</h2>
-            <div id="wordle-grid" class="wordle-grid"></div>
-            <div id="wordle-keyboard" class="keyboard"></div>
-            <div class="game-controls">
-                <button id="wordle-reset">New Word</button>
-            </div>
-        </section>
-
-        <!-- Minesweeper View -->
-        <section id="view-mines" class="view hidden">
-            <h2>Minesweeper</h2>
-            <div class="game-controls">
-                <span id="mine-count">Mines: 10</span>
-                <button id="mines-mode-btn">Mode: Reveal</button>
-                <button id="mines-reset">Reset</button>
-            </div>
-            <div id="mines-grid" class="mines-grid"></div>
-        </section>
-
-        <!-- Tic-Tac-Toe View -->
-        <section id="view-tictactoe" class="view hidden">
-            <h2>Tic-Tac-Toe</h2>
-            <div class="game-controls">
-                <span id="ttt-status">Your turn (X)</span>
-                <button id="ttt-reset">Reset</button>
-            </div>
-            <div id="ttt-grid" class="ttt-grid">
-                <div class="ttt-cell" data-index="0"></div>
-                <div class="ttt-cell" data-index="1"></div>
-                <div class="ttt-cell" data-index="2"></div>
-                <div class="ttt-cell" data-index="3"></div>
-                <div class="ttt-cell" data-index="4"></div>
-                <div class="ttt-cell" data-index="5"></div>
-                <div class="ttt-cell" data-index="6"></div>
-                <div class="ttt-cell" data-index="7"></div>
-                <div class="ttt-cell" data-index="8"></div>
-            </div>
-        </section>
-
-        <!-- Chess View -->
-        <section id="view-chess" class="view hidden">
-            <h2>E-Chess</h2>
-            <p class="game-info">Local 2-Player. Click a piece, then click a valid square.</p>
-            <div class="game-controls">
-                <span id="chess-turn">Turn: White</span>
-                <button id="chess-reset">Reset Board</button>
-            </div>
-            <div id="chess-board" class="chess-board"></div>
-        </section>
-
-        <!-- 2048 View -->
-        <section id="view-game2048" class="view hidden">
-            <h2>E-2048</h2>
-            <div class="game-controls">
-                <span id="score-2048">Score: 0</span>
-                <button id="reset-2048">Reset</button>
-            </div>
-            <div id="grid-2048" class="grid-2048"></div>
-            <div class="controls-2048">
-                <button id="btn-2048-up">▲</button>
-                <div class="horizontal-controls">
-                    <button id="btn-2048-left">◀</button>
-                    <button id="btn-2048-down">▼</button>
-                    <button id="btn-2048-right">▶</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Hangman View -->
-        <section id="view-hangman" class="view hidden">
-            <h2>Hangman</h2>
-            <div class="game-controls">
-                <span id="hangman-lives">Lives: 6</span>
-                <button id="hangman-reset">New Word</button>
-            </div>
-            <div class="hangman-display">
-                <pre id="hangman-gallows"></pre>
-                <div id="hangman-word-display">_ _ _ _ _</div>
-            </div>
-            <div id="hangman-keyboard" class="keyboard"></div>
-        </section>
-
-        <!-- Notes View -->
-        <section id="view-notes" class="view hidden">
-            <h2>E-Notes</h2>
-            <p class="game-info">Your notes are automatically saved locally.</p>
-            <textarea id="notes-textarea" placeholder="Start writing here..."></textarea>
-            <div class="game-controls">
-                <button id="notes-clear">Clear All</button>
-            </div>
-        </section>
+  <header class="app-header">
+    <div class="header-main">
+      <h1 id="app-title">E-INK HUB</h1>
+      <button id="theme-toggle" class="btn-border" aria-label="Changer de thème">🌓</button>
     </div>
+    <nav class="nav-bar">
+      <button id="btn-home" class="btn-nav active">Accueil</button>
+      <button id="btn-help" class="btn-nav">Règles</button>
+    </nav>
+  </header>
 
-    <script src="app.js"></script>
+  <main id="main-content">
+    <!-- HOME VIEW -->
+    <section id="view-home" class="view active">
+      <p class="intro-text">Une collection de jeux de logique et de lettres optimisée pour les écrans à encre électronique (E-ink). Contraste maximal, pas d'animations énergivores, jouable 100% hors-ligne.</p>
+      
+      <div class="game-grid">
+        <div class="game-card" data-game="hitori">
+          <h2>HITORI</h2>
+          <p>Logique pure. Éliminez les doublons sans isoler les cases ni coller les noirs.</p>
+          <button class="btn-action">Jouer</button>
+        </div>
+        
+        <div class="game-card" data-game="binary">
+          <h2>GRILLE BINAIRE</h2>
+          <p>Remplissez la grille de 0 et de 1 en respectant les règles d'alignement.</p>
+          <button class="btn-action">Jouer</button>
+        </div>
+
+        <div class="game-card" data-game="cryptogram">
+          <h2>CRYPTOGRAMME</h2>
+          <p>Décryptez des citations célèbres en retrouvant la substitution des lettres.</p>
+          <button class="btn-action">Jouer</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- HITORI VIEW -->
+    <section id="view-hitori" class="view">
+      <div class="game-header">
+        <button class="btn-back btn-border">← Retour</button>
+        <h2>Hitori</h2>
+        <div class="level-selector">
+          <button id="hitori-prev" class="btn-border">&lt;</button>
+          <span id="hitori-level-indicator">Niveau 1</span>
+          <button id="hitori-next" class="btn-border">&gt;</button>
+        </div>
+      </div>
+      <p class="game-instruction">Cliquez une fois pour noircir (éliminer), deux fois pour entourer (garder).</p>
+      <div id="hitori-grid" class="grid-container"></div>
+      <div class="game-controls">
+        <button id="hitori-reset" class="btn-border">Réinitialiser</button>
+        <button id="hitori-verify" class="btn-border btn-primary">Vérifier</button>
+      </div>
+      <div id="hitori-status" class="game-status"></div>
+    </section>
+
+    <!-- BINARY VIEW -->
+    <section id="view-binary" class="view">
+      <div class="game-header">
+        <button class="btn-back btn-border">← Retour</button>
+        <h2>Grille Binaire</h2>
+        <div class="level-selector">
+          <button id="binary-prev" class="btn-border">&lt;</button>
+          <span id="binary-level-indicator">Niveau 1</span>
+          <button id="binary-next" class="btn-border">&gt;</button>
+        </div>
+      </div>
+      <p class="game-instruction">Cliquez pour alterner entre vide, 0 et 1. Pas plus de deux chiffres identiques côte à côte.</p>
+      <div id="binary-grid" class="grid-container"></div>
+      <div class="game-controls">
+        <button id="binary-reset" class="btn-border">Réinitialiser</button>
+        <button id="binary-verify" class="btn-border btn-primary">Vérifier</button>
+      </div>
+      <div id="binary-status" class="game-status"></div>
+    </section>
+
+    <!-- CRYPTOGRAM VIEW -->
+    <section id="view-cryptogram" class="view">
+      <div class="game-header">
+        <button class="btn-back btn-border">← Retour</button>
+        <h2>Cryptogramme</h2>
+        <div class="level-selector">
+          <button id="crypto-prev" class="btn-border">&lt;</button>
+          <span id="crypto-level-indicator">Défi 1</span>
+          <button id="crypto-next" class="btn-border">&gt;</button>
+        </div>
+      </div>
+      <p class="game-instruction">Sélectionnez une lettre chiffrée puis tapez ou choisissez sa correspondance.</p>
+      
+      <div id="crypto-board" class="crypto-container"></div>
+      
+      <div id="crypto-keyboard" class="keyboard-container"></div>
+
+      <div class="game-controls">
+        <button id="crypto-reset" class="btn-border">Réinitialiser</button>
+        <button id="crypto-verify" class="btn-border btn-primary">Vérifier</button>
+      </div>
+      <div id="crypto-status" class="game-status"></div>
+    </section>
+
+    <!-- RULES MODAL -->
+    <section id="view-help" class="view">
+      <h2>Règles des Jeux</h2>
+      <div class="rules-content">
+        <h3>Hitori</h3>
+        <ul>
+          <li>Noircissez les cases pour qu'un chiffre n'apparaisse qu'une seule fois par ligne et par colonne.</li>
+          <li>Les cases noires ne peuvent pas se toucher par un côté (uniquement en diagonale).</li>
+          <li>Toutes les cases blanches restantes doivent être connectées entre elles pour former un seul groupe continu.</li>
+        </ul>
+
+        <h3>Grille Binaire (Takuzu)</h3>
+        <ul>
+          <li>Remplissez la grille avec des 0 et des 1.</li>
+          <li>Il ne peut pas y avoir plus de deux chiffres identiques consécutifs sur une ligne ou une colonne (ex: pas de "111" ou "000").</li>
+          <li>Chaque ligne et chaque colonne doit contenir autant de 0 que de 1.</li>
+          <li>Chaque ligne et colonne doit être unique.</li>
+        </ul>
+
+        <h3>Cryptogramme</h3>
+        <ul>
+          <li>Une citation célèbre a été chiffrée par substitution de lettres (chaque lettre de l'alphabet est remplacée par une autre).</li>
+          <li>À vous de retrouver le message original en analysant la fréquence et la logique des mots.</li>
+          <li>Les signes de ponctuation et les espaces restent inchangés.</li>
+        </ul>
+      </div>
+      <button id="btn-rules-back" class="btn-border btn-primary" style="margin-top: 20px; width: 100%;">Retour à l'accueil</button>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>E-Ink Hub v1.0.0 - Mode Hors-ligne Activé</p>
+  </footer>
+
+  <script src="app.js"></script>
 </body>
 </html>
