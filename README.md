@@ -1,2 +1,3 @@
-# e-ink-hub-4992
-PWA générée automatiquement via Gemini
+Hub de jeux E-ink.
+Application en PWA.
+Jeux optimisés pour écran à affichage eink.

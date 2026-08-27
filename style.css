@@ -1,6 +1,4 @@
 /* DESIGN SYSTEM OPTIMISÉ POUR E-INK (ENCRE ÉLECTRONIQUE) */
-/* Pas de dégradés, pas d'ombres floues, pas d'animations fluides (évite le ghosting) */
-
 :root {
   --bg-color: #ffffff;
   --text-color: #000000;
@@ -27,7 +25,6 @@
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
-  /* Désactivation des transitions pour éviter le ghosting sur écran E-ink */
   transition: none !important;
 }
 
@@ -37,7 +34,7 @@ body {
   font-family: var(--font-family);
   line-height: 1.4;
   padding: 10px;
-  max-width: 480px; /* Format smartphone */
+  max-width: 480px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -56,6 +53,12 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 h1 {

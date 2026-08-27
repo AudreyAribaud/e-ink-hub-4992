@@ -1,3 +1,53 @@
+// --- SERVICE WORKER & PWA MANAGEMENT ---
+let deferredPrompt;
+const installBtn = document.getElementById('install-btn');
+
+if ('serviceWorker' in navigator) {
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      window.location.reload();
+    }
+  });
+
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then((reg) => {
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            newWorker.postMessage({ action: 'skipWaiting' });
+          }
+        });
+      });
+    });
+  });
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (installBtn) installBtn.style.display = 'inline-flex';
+});
+
+if (installBtn) {
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      installBtn.style.display = 'none';
+    }
+    deferredPrompt = null;
+  });
+}
+
+window.addEventListener('appinstalled', () => {
+  if (installBtn) installBtn.style.display = 'none';
+  deferredPrompt = null;
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   // --- STATE MANAGEMENT ---
   const state = {
@@ -6,22 +56,22 @@ document.addEventListener('DOMContentLoaded', () => {
     hitori: {
       level: 0,
       grid: [],
-      userStates: [] // 0: normal, 1: shaded, 2: circled
+      userStates: []
     },
     binary: {
       level: 0,
       grid: [],
-      userGrid: [] // null, 0, 1
+      userGrid: []
     },
     cryptogram: {
       level: 0,
       cipherMap: {},
-      userDecryption: {}, // cipherChar -> plainChar
+      userDecryption: {},
       selectedCipherChar: null
     }
   };
 
-  // --- DATASETS (Offline levels) ---
+  // --- DATASETS ---
   const HITORI_LEVELS = [
     {
       size: 5,
@@ -58,7 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const BINARY_LEVELS = [
     {
       size: 6,
-      // null represents empty cells, numbers are pre-filled
       grid: [
         [1, null, null, null, 0, null],
         [null, 0, 0, null, null, 1],
@@ -121,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnHelp = document.getElementById('btn-help');
   const btnRulesBack = document.getElementById('btn-rules-back');
 
-  // --- ROUTER / VIEW NAVIGATION ---
+  // --- ROUTER ---
   function switchView(viewName) {
     state.currentView = viewName;
     Object.keys(views).forEach(key => {
@@ -132,7 +181,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Update nav buttons state
     if (viewName === 'home') {
       btnHome.classList.add('active');
       btnHelp.classList.remove('active');
@@ -144,27 +192,24 @@ document.addEventListener('DOMContentLoaded', () => {
       btnHelp.classList.remove('active');
     }
 
-    // Initialize game if switched to a game view
     if (viewName === 'hitori') initHitori();
     if (viewName === 'binary') initBinary();
     if (viewName === 'cryptogram') initCryptogram();
   }
 
-  // --- THEME MANAGEMENT (E-INK FRIENDLY) ---
+  // --- THEME MANAGEMENT ---
   function toggleTheme() {
     state.theme = state.theme === 'light' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', state.theme);
     localStorage.setItem('eink-theme', state.theme);
   }
 
-  // Load saved theme
   const savedTheme = localStorage.getItem('eink-theme');
   if (savedTheme) {
     state.theme = savedTheme;
     document.documentElement.setAttribute('data-theme', savedTheme);
   }
 
-  // --- EVENT LISTENERS (NAV) ---
   themeToggle.addEventListener('click', toggleTheme);
   btnHome.addEventListener('click', () => switchView('home'));
   btnHelp.addEventListener('click', () => switchView('help'));
@@ -181,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => switchView('home'));
   });
 
-  // --- GAME 1: HITORI ---
+  // --- HITORI ---
   const hitoriGridEl = document.getElementById('hitori-grid');
   const hitoriStatusEl = document.getElementById('hitori-status');
   const hitoriLevelIndicator = document.getElementById('hitori-level-indicator');
@@ -206,15 +251,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         cell.addEventListener('click', () => {
           let currentState = state.hitori.userStates[r][c];
-          let nextState = (currentState + 1) % 3; // 0 -> 1 -> 2 -> 0
+          let nextState = (currentState + 1) % 3;
           state.hitori.userStates[r][c] = nextState;
 
           cell.classList.remove('hitori-shaded', 'hitori-circled');
-          if (nextState === 1) {
-            cell.classList.add('hitori-shaded');
-          } else if (nextState === 2) {
-            cell.classList.add('hitori-circled');
-          }
+          if (nextState === 1) cell.classList.add('hitori-shaded');
+          else if (nextState === 2) cell.classList.add('hitori-circled');
         });
 
         hitoriGridEl.appendChild(cell);
@@ -243,11 +285,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const grid = state.hitori.grid;
     const states = state.hitori.userStates;
 
-    // Rule 1: No duplicate numbers in any row/col among unshaded cells
     for (let r = 0; r < size; r++) {
       let rowVals = {};
       for (let c = 0; c < size; c++) {
-        if (states[r][c] !== 1) { // not shaded
+        if (states[r][c] !== 1) {
           let val = grid[r][c];
           if (rowVals[val]) {
             hitoriStatusEl.textContent = "Erreur : Doublon détecté sur une ligne.";
@@ -261,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
     for (let c = 0; c < size; c++) {
       let colVals = {};
       for (let r = 0; r < size; r++) {
-        if (states[r][c] !== 1) { // not shaded
+        if (states[r][c] !== 1) {
           let val = grid[r][c];
           if (colVals[val]) {
             hitoriStatusEl.textContent = "Erreur : Doublon détecté sur une colonne.";
@@ -272,7 +313,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Rule 2: Shaded cells cannot be adjacent horizontally or vertically
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
         if (states[r][c] === 1) {
@@ -288,7 +328,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Rule 3: All unshaded cells must be connected
     let unshadedCount = 0;
     let startR = -1, startC = -1;
     for (let r = 0; r < size; r++) {
@@ -303,7 +342,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Flood fill to check connectivity
     let visited = Array(size).fill(null).map(() => Array(size).fill(false));
     let queue = [[startR, startC]];
     visited[startR][startC] = true;
@@ -334,8 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
     hitoriStatusEl.textContent = "Félicitations ! Grille résolue avec succès.";
   });
 
-
-  // --- GAME 2: BINARY GRID ---
+  // --- BINARY GRID ---
   const binaryGridEl = document.getElementById('binary-grid');
   const binaryStatusEl = document.getElementById('binary-status');
   const binaryLevelIndicator = document.getElementById('binary-level-indicator');
@@ -402,7 +439,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const size = BINARY_LEVELS[state.binary.level].size;
     const grid = state.binary.userGrid;
 
-    // Check if full
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
         if (grid[r][c] === null) {
@@ -412,7 +448,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Rule 1: Equal number of 0s and 1s in each row and col
     for (let r = 0; r < size; r++) {
       let count0 = 0, count1 = 0;
       for (let c = 0; c < size; c++) {
@@ -437,7 +472,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Rule 2: No more than two adjacent identical numbers
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size - 2; c++) {
         if (grid[r][c] !== null && grid[r][c] === grid[r][c+1] && grid[r][c] === grid[r][c+2]) {
@@ -456,7 +490,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Rule 3: Unique rows and columns
     let rowsStr = [];
     for (let r = 0; r < size; r++) {
       let rStr = grid[r].join('');
@@ -483,8 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
     binaryStatusEl.textContent = "Félicitations ! Grille résolue avec succès.";
   });
 
-
-  // --- GAME 3: CRYPTOGRAM ---
+  // --- CRYPTOGRAM ---
   const cryptoBoardEl = document.getElementById('crypto-board');
   const cryptoKeyboardEl = document.getElementById('crypto-keyboard');
   const cryptoStatusEl = document.getElementById('crypto-status');
@@ -493,20 +525,16 @@ document.addEventListener('DOMContentLoaded', () => {
   function generateSubstitutionCipher() {
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
     let shuffled = [...alphabet];
-    // Simple Fisher-Yates shuffle
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    
-    // Ensure no letter maps to itself to keep it fun
     for (let i = 0; i < alphabet.length; i++) {
       if (alphabet[i] === shuffled[i]) {
         const swapIndex = (i + 1) % alphabet.length;
         [shuffled[i], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[i]];
       }
     }
-
     let map = {};
     alphabet.forEach((char, idx) => {
       map[char] = shuffled[idx];
@@ -521,11 +549,8 @@ document.addEventListener('DOMContentLoaded', () => {
     cryptoBoardEl.innerHTML = "";
     state.cryptogram.selectedCipherChar = null;
     state.cryptogram.userDecryption = {};
-
-    // Generate a stable cipher mapping for this level session
     state.cryptogram.cipherMap = generateSubstitutionCipher();
 
-    // Render Board
     const words = levelData.quote.split(" ");
     words.forEach(word => {
       const wordDiv = document.createElement('div');
@@ -537,7 +562,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (/[A-Z]/.test(char)) {
           const cipherChar = state.cryptogram.cipherMap[char];
-          
           const inputChar = document.createElement('div');
           inputChar.classList.add('crypto-input-char');
           inputChar.textContent = "";
@@ -551,11 +575,8 @@ document.addEventListener('DOMContentLoaded', () => {
           box.appendChild(cipherLabel);
           box.dataset.cipher = cipherChar;
 
-          box.addEventListener('click', () => {
-            selectCipherLetter(cipherChar);
-          });
+          box.addEventListener('click', () => selectCipherLetter(cipherChar));
         } else {
-          // Punctuation
           const punct = document.createElement('span');
           punct.classList.add('crypto-punctuation');
           punct.textContent = char;
@@ -571,23 +592,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function selectCipherLetter(cipherChar) {
     state.cryptogram.selectedCipherChar = cipherChar;
-    
-    // Highlight all instances of this cipher letter
     document.querySelectorAll('.crypto-letter-box').forEach(box => {
-      if (box.dataset.cipher === cipherChar) {
-        box.classList.add('selected');
-      } else {
-        box.classList.remove('selected');
-      }
+      if (box.dataset.cipher === cipherChar) box.classList.add('selected');
+      else box.classList.remove('selected');
     });
 
-    // Highlight key on virtual keyboard
     document.querySelectorAll('.key-btn').forEach(btn => {
-      if (btn.textContent === state.cryptogram.userDecryption[cipherChar]) {
-        btn.classList.add('active');
-      } else {
-        btn.classList.remove('active');
-      }
+      if (btn.textContent === state.cryptogram.userDecryption[cipherChar]) btn.classList.add('active');
+      else btn.classList.remove('active');
     });
   }
 
@@ -603,19 +615,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state.cryptogram.selectedCipherChar) {
           const cipher = state.cryptogram.selectedCipherChar;
           state.cryptogram.userDecryption[cipher] = char;
-          
-          // Update all matching inputs on board
           document.querySelectorAll(`.crypto-input-char[data-cipher="${cipher}"]`).forEach(el => {
             el.textContent = char;
           });
-          
-          selectCipherLetter(cipher); // refresh highlight
+          selectCipherLetter(cipher);
         }
       });
       cryptoKeyboardEl.appendChild(btn);
     });
 
-    // Clear Key
     const clearBtn = document.createElement('button');
     clearBtn.classList.add('key-btn', 'clear-key');
     clearBtn.textContent = "Effacer";
@@ -652,28 +660,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const levelData = CRYPTO_LEVELS[state.cryptogram.level];
     let isCorrect = true;
 
-    // Check if every letter matches the original quote
     document.querySelectorAll('.crypto-letter-box').forEach(box => {
       const cipher = box.dataset.cipher;
       if (cipher) {
         const userChar = state.cryptogram.userDecryption[cipher];
-        // Find original char from cipherMap
         const originalChar = Object.keys(state.cryptogram.cipherMap).find(key => state.cryptogram.cipherMap[key] === cipher);
-        
-        if (!userChar || userChar !== originalChar) {
-          isCorrect = false;
-        }
+        if (!userChar || userChar !== originalChar) isCorrect = false;
       }
     });
 
-    if (isCorrect) {
-      cryptoStatusEl.textContent = `Bravo ! Citation décryptée ! - ${levelData.author}`;
-    } else {
-      cryptoStatusEl.textContent = "Certaines lettres sont incorrectes ou manquantes.";
-    }
+    if (isCorrect) cryptoStatusEl.textContent = `Bravo ! Citation décryptée ! - ${levelData.author}`;
+    else cryptoStatusEl.textContent = "Certaines lettres sont incorrectes ou manquantes.";
   });
 
-  // Support physical keyboard for Cryptogram
   window.addEventListener('keydown', (e) => {
     if (state.currentView === 'cryptogram' && state.cryptogram.selectedCipherChar) {
       const key = e.key.toUpperCase();
@@ -694,5 +693,4 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
-
 });
