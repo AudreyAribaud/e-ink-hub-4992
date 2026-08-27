@@ -395,3 +395,45 @@ h1 {
   font-size: 0.75rem;
   font-weight: bold;
 }
+
+/* Connect 4 Layout */
+.connect4-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin: 0 auto 15px auto;
+  width: 100%;
+  max-width: 350px;
+  aspect-ratio: 7 / 6;
+  border: 3px solid var(--border-color);
+  padding: 4px;
+  background-color: var(--border-color);
+}
+
+.connect4-cell {
+  background-color: var(--bg-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  position: relative;
+}
+
+.connect4-cell::after {
+  content: "";
+  width: 70%;
+  height: 70%;
+  border-radius: 50%;
+  display: block;
+  box-sizing: border-box; /* Assure une taille rigoureusement égale pour P1 et P2 */
+}
+
+.connect4-cell.p1::after {
+  background-color: var(--text-color);
+}
+
+.connect4-cell.p2::after {
+  border: 3px solid var(--border-color);
+  background-color: var(--bg-color);
+}

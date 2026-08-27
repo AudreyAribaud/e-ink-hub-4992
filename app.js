@@ -68,6 +68,12 @@ document.addEventListener('DOMContentLoaded', () => {
       cipherMap: {},
       userDecryption: {},
       selectedCipherChar: null
+    },
+    connect4: {
+      board: [], // 6 lignes x 7 colonnes
+      currentPlayer: 1, // 1 ou 2
+      gameOver: false,
+      vsAI: true // true: Joueur vs IA, false: 2 Joueurs
     }
   };
 
@@ -157,11 +163,12 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   // --- DOM ELEMENTS ---
-  const views = {
+ const views = {
     home: document.getElementById('view-home'),
     hitori: document.getElementById('view-hitori'),
     binary: document.getElementById('view-binary'),
     cryptogram: document.getElementById('view-cryptogram'),
+    connect4: document.getElementById('view-connect4'),
     help: document.getElementById('view-help')
   };
 
@@ -195,6 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (viewName === 'hitori') initHitori();
     if (viewName === 'binary') initBinary();
     if (viewName === 'cryptogram') initCryptogram();
+    if (viewName === 'connect4') initConnect4();
   }
 
   // --- THEME MANAGEMENT ---
@@ -693,4 +701,196 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+  // --- PUISSANCE 4 ---
+  const connect4BoardEl = document.getElementById('connect4-board');
+  const connect4StatusEl = document.getElementById('connect4-status');
+  const connect4TurnIndicator = document.getElementById('connect4-turn-indicator');
+  const connect4ModeBtn = document.getElementById('connect4-mode');
+
+  function initConnect4() {
+    state.connect4.board = Array(6).fill(null).map(() => Array(7).fill(0));
+    state.connect4.currentPlayer = 1;
+    state.connect4.gameOver = false;
+    
+    connect4StatusEl.textContent = "";
+    if (connect4ModeBtn) {
+      connect4ModeBtn.textContent = state.connect4.vsAI ? "Mode : vs IA" : "Mode : 2 Joueurs";
+    }
+    updateConnect4TurnDisplay();
+    renderConnect4Board();
+  }
+
+  function updateConnect4TurnDisplay() {
+    if (state.connect4.gameOver) return;
+    let label = "";
+    if (state.connect4.vsAI) {
+      label = state.connect4.currentPlayer === 1 ? "Tour : Vous (●)" : "Tour : IA (○)...";
+    } else {
+      const symbol = state.connect4.currentPlayer === 1 ? "●" : "○";
+      label = `Tour : Joueur ${state.connect4.currentPlayer} (${symbol})`;
+    }
+    connect4TurnIndicator.textContent = label;
+  }
+
+  function renderConnect4Board() {
+    connect4BoardEl.innerHTML = "";
+    for (let r = 0; r < 6; r++) {
+      for (let c = 0; c < 7; c++) {
+        const cell = document.createElement('div');
+        cell.classList.add('connect4-cell');
+        const val = state.connect4.board[r][c];
+        
+        if (val === 1) cell.classList.add('p1');
+        else if (val === 2) cell.classList.add('p2');
+
+        cell.addEventListener('click', () => {
+          if (state.connect4.vsAI && state.connect4.currentPlayer === 2) return;
+          dropPiece(c);
+        });
+        connect4BoardEl.appendChild(cell);
+      }
+    }
+  }
+
+  function getAvailableRow(board, col) {
+    for (let r = 5; r >= 0; r--) {
+      if (board[r][col] === 0) return r;
+    }
+    return -1;
+  }
+
+  function dropPiece(col) {
+    if (state.connect4.gameOver) return;
+
+    const targetRow = getAvailableRow(state.connect4.board, col);
+    if (targetRow === -1) return; // Colonne pleine
+
+    const player = state.connect4.currentPlayer;
+    state.connect4.board[targetRow][col] = player;
+    renderConnect4Board();
+
+    if (checkConnect4Win(state.connect4.board, targetRow, col, player)) {
+      state.connect4.gameOver = true;
+      if (state.connect4.vsAI) {
+        connect4StatusEl.textContent = player === 1 ? "Victoire ! Vous avez battu l'IA ! 🎉" : "L'IA a gagné ! 🤖";
+      } else {
+        connect4StatusEl.textContent = `Victoire du Joueur ${player} ! 🎉`;
+      }
+      connect4TurnIndicator.textContent = "Partie terminée";
+      return;
+    }
+
+    if (state.connect4.board.every(row => row.every(val => val !== 0))) {
+      state.connect4.gameOver = true;
+      connect4StatusEl.textContent = "Match nul ! La grille est pleine.";
+      connect4TurnIndicator.textContent = "Partie terminée";
+      return;
+    }
+
+    state.connect4.currentPlayer = player === 1 ? 2 : 1;
+    updateConnect4TurnDisplay();
+
+    // Tour de l'IA
+    if (state.connect4.vsAI && state.connect4.currentPlayer === 2 && !state.connect4.gameOver) {
+      setTimeout(makeAIMove, 400);
+    }
+  }
+
+  function checkConnect4Win(board, r, c, p) {
+    const directions = [
+      [[0, 1], [0, -1]],   // Horizontale
+      [[1, 0], [-1, 0]],   // Verticale
+      [[1, 1], [-1, -1]],  // Diagonale \
+      [[1, -1], [-1, 1]]   // Diagonale /
+    ];
+
+    return directions.some(dir => {
+      let count = 1;
+      dir.forEach(([dr, dc]) => {
+        let nr = r + dr;
+        let nc = c + dc;
+        while (nr >= 0 && nr < 6 && nc >= 0 && nc < 7 && board[nr][nc] === p) {
+          count++;
+          nr += dr;
+          nc += dc;
+        }
+      });
+      return count >= 4;
+    });
+  }
+
+  // --- IA POUR LE PUISSANCE 4 ---
+  function makeAIMove() {
+    const board = state.connect4.board;
+    const validCols = [];
+    for (let c = 0; c < 7; c++) {
+      if (getAvailableRow(board, c) !== -1) validCols.push(c);
+    }
+
+    if (validCols.length === 0) return;
+
+    // 1. L'IA vérifie si elle peut gagner au coup actuel
+    for (let c of validCols) {
+      let r = getAvailableRow(board, c);
+      board[r][c] = 2;
+      if (checkConnect4Win(board, r, c, 2)) {
+        board[r][c] = 0;
+        dropPiece(c);
+        return;
+      }
+      board[r][c] = 0;
+    }
+
+    // 2. L'IA vérifie si elle doit bloquer le joueur 1 qui va gagner
+    for (let c of validCols) {
+      let r = getAvailableRow(board, c);
+      board[r][c] = 1;
+      if (checkConnect4Win(board, r, c, 1)) {
+        board[r][c] = 0;
+        dropPiece(c);
+        return;
+      }
+      board[r][c] = 0;
+    }
+
+    // 3. Sinon, évaluer le meilleur coup basé sur un score de colonne
+    let bestScore = -Infinity;
+    let bestCol = validCols[Math.floor(Math.random() * validCols.length)];
+
+    for (let c of validCols) {
+      let r = getAvailableRow(board, c);
+      let score = 0;
+
+      // Privilégier les colonnes centrales
+      score += (3 - Math.abs(3 - c)) * 3;
+
+      // Éviter de donner un coup gagnant au joueur 1 au tour suivant
+      if (r > 0) {
+        board[r][c] = 2;
+        board[r - 1][c] = 1;
+        if (checkConnect4Win(board, r - 1, c, 1)) {
+          score -= 50;
+        }
+        board[r - 1][c] = 0;
+        board[r][c] = 0;
+      }
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestCol = c;
+      }
+    }
+
+    dropPiece(bestCol);
+  }
+
+  // Événements
+  if (connect4ModeBtn) {
+    connect4ModeBtn.addEventListener('click', () => {
+      state.connect4.vsAI = !state.connect4.vsAI;
+      initConnect4();
+    });
+  }
+
+  document.getElementById('connect4-reset').addEventListener('click', initConnect4);
 });

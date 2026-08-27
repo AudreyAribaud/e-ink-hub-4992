@@ -47,6 +47,13 @@
           <button class="btn-action">Jouer</button>
         </div>
       </div>
+
+      <div class="game-card" data-game="connect4">
+          <h2>PUISSANCE 4</h2>
+          <p>Alignez 4 jetons horizontalement, verticalement ou en diagonale.</p>
+          <button class="btn-action">Jouer</button>
+        </div>
+
     </section>
 
     <!-- HITORI VIEW -->
@@ -113,6 +120,24 @@
       <div id="crypto-status" class="game-status"></div>
     </section>
 
+    <!-- CONNECT 4 VIEW -->
+    <section id="view-connect4" class="view">
+      <div class="game-header">
+        <button class="btn-back btn-border">← Retour</button>
+        <h2>Puissance 4</h2>
+        <span id="connect4-turn-indicator">Tour : Joueur 1 (●)</span>
+      </div>
+      <p class="game-instruction">Cliquez sur une colonne pour y faire tomber votre jeton.</p>
+      
+      <div id="connect4-board" class="connect4-grid"></div>
+
+      <div class="game-controls">
+        <button id="connect4-mode" class="btn-border">Mode: vs IA</button>
+        <button id="connect4-reset" class="btn-border btn-primary">Nouvelle partie</button>
+      </div>
+      <div id="connect4-status" class="game-status"></div>
+    </section>
+
     <!-- RULES MODAL -->
     <section id="view-help" class="view">
       <h2>Règles des Jeux</h2>
@@ -138,6 +163,14 @@
           <li>À vous de retrouver le message original en analysant la fréquence et la logique des mots.</li>
           <li>Les signes de ponctuation et les espaces restent inchangés.</li>
         </ul>
+
+        <h3>Puissance 4</h3>
+        <ul>
+          <li>Chaque joueur place un jeton à son tour dans une colonne.</li>
+          <li>Le jeton tombe au niveau le plus bas disponible dans cette colonne.</li>
+          <li>Le premier joueur à aligner 4 jetons (ligne, colonne ou diagonale) gagne la partie.</li>
+        </ul>
+        
       </div>
       <button id="btn-rules-back" class="btn-border btn-primary" style="margin-top: 20px; width: 100%;">Retour à l'accueil</button>
     </section>
